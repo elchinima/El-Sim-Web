@@ -1,16 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - El-Sim</title>
   <link rel="icon" type="image/png" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
   <link rel="apple-touch-icon" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="./Assets/Style/main-style.css">
+  <link rel="stylesheet" href="./Assets/Style/main-responsive.css">
   <script defer src="./Assets/Script/main-script.js"></script>
   <script defer src="./Assets/Script/carousel.js"></script>
 </head>
+
 <body>
   <header class="site-header">
     <a class="brand" href="./index.html" aria-label="El-Sim">
@@ -18,7 +23,8 @@
       <span>El-Sim</span>
     </a>
 
-    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="main-navigation">
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"
+      aria-controls="main-navigation">
       <span></span>
       <span></span>
       <span></span>
@@ -89,7 +95,8 @@
     <section class="auth-intro" aria-labelledby="auth-title">
       <p class="eyebrow">secure access</p>
       <h1 id="auth-title">Manage your<br>El-Sim profile</h1>
-      <p>Sign in with your FIN and password, or create a new profile before choosing and activating your digital SIM.</p>
+      <p>Sign in with your FIN and password, or create a new profile before choosing and activating your digital SIM.
+      </p>
 
       <div class="auth-badges" aria-label="Account benefits">
         <span>Fast activation</span>
@@ -107,13 +114,15 @@
       <form class="auth-form is-active" data-auth-form="login" aria-hidden="false" novalidate>
         <div class="field">
           <label for="login-fin">FIN</label>
-          <input id="login-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7" pattern="[A-Za-z0-9]{7}" data-fin-input required>
+          <input id="login-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
+            pattern="[A-Za-z0-9]{7}" data-fin-input required>
           <small>Exactly 7 English letters or digits.</small>
         </div>
 
         <div class="field">
           <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password" autocomplete="current-password" data-password-input required>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" data-password-input
+            required>
         </div>
 
         <button class="button button-primary auth-submit" type="submit">Login</button>
@@ -128,13 +137,15 @@
 
         <div class="field">
           <label for="register-fin">FIN</label>
-          <input id="register-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7" pattern="[A-Za-z0-9]{7}" data-fin-input required>
+          <input id="register-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
+            pattern="[A-Za-z0-9]{7}" data-fin-input required>
           <small>Exactly 7 English letters or digits.</small>
         </div>
 
         <div class="field">
           <label for="register-password">Password</label>
-          <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" data-password-input required>
+          <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8"
+            data-password-input required>
           <small>Minimum 8 characters.</small>
         </div>
 
@@ -146,7 +157,9 @@
 
   <footer class="site-footer">
     <span>El-Sim</span>
+    <span>Elsim © 2026</span>
     <span>Baku, Azerbaijan</span>
   </footer>
 </body>
+
 </html>

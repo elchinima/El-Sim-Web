@@ -7,6 +7,7 @@ if (slider) {
     let swipeStartX = 0;
     let swipeDeltaX = 0;
     let isSwiping = false;
+    let isSliderVisible = false;
 
     const setSlide = (index) => {
       activeSlide = (index + dots.length) % dots.length;
@@ -24,9 +25,23 @@ if (slider) {
       setSlide((activeSlide + 1) % dots.length);
     };
 
-    const restartSliderTimer = () => {
+    const startSliderTimer = () => {
       clearInterval(sliderTimer);
+      slider.classList.add("is-running");
       sliderTimer = setInterval(nextSlide, 5000);
+    };
+
+    const stopSliderTimer = () => {
+      clearInterval(sliderTimer);
+      slider.classList.remove("is-running");
+    };
+
+    const restartSliderTimer = () => {
+      if (!isSliderVisible) {
+        return;
+      }
+
+      startSliderTimer();
     };
 
     const finishSwipe = (event) => {
@@ -64,7 +79,7 @@ if (slider) {
 
       event.preventDefault();
       swipeDeltaX = event.clientX - swipeStartX;
-      sliderTrack.style.transform = `translateX(calc(${-activeSlide * 33.3333}% + ${swipeDeltaX}px))`;
+      sliderTrack.style.transform = `translateX(calc(${-activeSlide * 100}% + ${swipeDeltaX}px))`;
     });
 
     slider.addEventListener("pointerup", finishSwipe);
@@ -72,5 +87,27 @@ if (slider) {
     slider.addEventListener("lostpointercapture", finishSwipe);
     slider.addEventListener("dragstart", (event) => event.preventDefault());
 
-    restartSliderTimer();
+    if ("IntersectionObserver" in window) {
+      const sliderObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            isSliderVisible = entry.isIntersecting;
+
+            if (isSliderVisible) {
+              startSliderTimer();
+            } else {
+              stopSliderTimer();
+            }
+          });
+        },
+        {
+          threshold: 0.35,
+        }
+      );
+
+      sliderObserver.observe(slider);
+    } else {
+      isSliderVisible = true;
+      startSliderTimer();
+    }
 }
