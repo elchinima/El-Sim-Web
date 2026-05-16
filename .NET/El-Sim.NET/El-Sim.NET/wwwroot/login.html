@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - El-Sim</title>
+  <link rel="icon" type="image/png" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
+  <link rel="apple-touch-icon" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="./Assets/Style/main-style.css">
+  <link rel="stylesheet" href="./Assets/Style/main-responsive.css">
+  <script defer src="./Assets/Script/main-script.js"></script>
+  <script defer src="./Assets/Script/lang.js"></script>
+  <script defer src="./Assets/Script/carousel.js"></script>
+</head>
+
+<body>
+  <header class="site-header">
+    <a class="brand" href="./index.html" aria-label="El-Sim">
+      <img src="./Assets/Image/Logo/El-Sim_Logo_Icon.png" alt="El-Sim">
+      <span>El-Sim</span>
+    </a>
+
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false"
+      aria-controls="main-navigation">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav class="nav-links" id="main-navigation" aria-label="Main navigation">
+      <a href="./pass.html" aria-label="Pass">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"></path>
+          <path d="M8 8h8"></path>
+          <path d="M8 12h5"></path>
+          <path d="M9 16h6"></path>
+        </svg>
+        <span>Pass</span>
+      </a>
+      <a href="./plans.html" aria-label="Plans">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 19V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12"></path>
+          <path d="M4 19h16"></path>
+          <path d="M8 9h8"></path>
+          <path d="M8 13h3"></path>
+          <path d="M14 13h2"></path>
+        </svg>
+        <span>Plans</span>
+      </a>
+      <a href="./global.html" aria-label="Global">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h18"></path>
+          <path d="M12 3a14 14 0 0 1 0 18"></path>
+          <path d="M12 3a14 14 0 0 0 0 18"></path>
+        </svg>
+        <span>Global</span>
+      </a>
+      <a href="./index.html#steps" aria-label="Activation">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3v6"></path>
+          <path d="m9 6 3-3 3 3"></path>
+          <path d="M7 10a5 5 0 1 0 10 0"></path>
+          <path d="M6 20h12"></path>
+        </svg>
+        <span>Activation</span>
+      </a>
+      <a href="./wifi.html" aria-label="WI-FI">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12.5a10 10 0 0 1 14 0"></path>
+          <path d="M8.5 16a5 5 0 0 1 7 0"></path>
+          <path d="M12 20h.01"></path>
+          <path d="M2 9a15 15 0 0 1 20 0"></path>
+        </svg>
+        <span>WI-FI</span>
+      </a>
+      <a href="./index.html#support" aria-label="Support">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 12a8 8 0 0 1 16 0v4a2 2 0 0 1-2 2h-2"></path>
+          <path d="M6 13v3a2 2 0 0 0 2 2"></path>
+          <path d="M18 13v3"></path>
+          <path d="M9 19h6"></path>
+        </svg>
+        <span>Support</span>
+      </a>
+    </nav>
+
+    <a class="header-action" href="./index.html">Home</a>
+  </header>
+
+  <main class="auth-shell">
+    <section class="auth-intro" aria-labelledby="auth-title">
+      <p class="eyebrow">secure access</p>
+      <h1 id="auth-title">Manage your<br>El-Sim profile</h1>
+      <p>Sign in with your FIN and password, or create a new profile before choosing and activating your digital SIM.
+      </p>
+
+      <div class="auth-badges" aria-label="Account benefits">
+        <span>Fast activation</span>
+        <span>Plan history</span>
+        <span>Support access</span>
+      </div>
+    </section>
+
+    <section class="auth-panel" aria-label="Login and registration">
+      <div class="auth-tabs" role="tablist" aria-label="Account forms">
+        <button class="auth-tab is-active" type="button" data-auth-target="login">Login</button>
+        <button class="auth-tab" type="button" data-auth-target="register">Register</button>
+      </div>
+
+      <form class="auth-form is-active" data-auth-form="login" aria-hidden="false" novalidate>
+        <div class="field">
+          <label for="login-fin">FIN</label>
+          <input id="login-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
+            pattern="[A-Za-z0-9]{7}" data-fin-input required>
+          <small>Exactly 7 English letters or digits.</small>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" data-password-input
+            required>
+        </div>
+
+        <button class="button button-primary auth-submit" type="submit">Login</button>
+        <p class="auth-message" aria-live="polite"></p>
+      </form>
+
+      <form class="auth-form" data-auth-form="register" aria-hidden="true" novalidate>
+        <div class="field">
+          <label for="register-name">Name</label>
+          <input id="register-name" name="name" type="text" autocomplete="given-name" required>
+        </div>
+
+        <div class="field">
+          <label for="register-fin">FIN</label>
+          <input id="register-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
+            pattern="[A-Za-z0-9]{7}" data-fin-input required>
+          <small>Exactly 7 English letters or digits.</small>
+        </div>
+
+        <div class="field">
+          <label for="register-password">Password</label>
+          <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8"
+            data-password-input required>
+          <small>Minimum 8 characters.</small>
+        </div>
+
+        <button class="button button-primary auth-submit" type="submit">Create account</button>
+        <p class="auth-message" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>El-Sim</span>
+    <div class="language-switch" aria-label="Language">
+      <button type="button" data-lang-button="en">EN</button>
+      <button type="button" data-lang-button="ru">RU</button>
+      <button type="button" data-lang-button="az">AZ</button>
+    </div>
+    <span>Elsim &copy; 2026</span>
+    <span>Baku, Azerbaijan</span>
+  </footer>
+</body>
+
+</html>

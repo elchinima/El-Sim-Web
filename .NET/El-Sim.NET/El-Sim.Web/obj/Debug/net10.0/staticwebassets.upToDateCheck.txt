@@ -1,0 +1,16 @@
+wwwroot\Assets\Image\Icon\Icon_1.png
+wwwroot\Assets\Image\Logo\El-Sim_Favicon_Large.png
+wwwroot\Assets\Image\Logo\El-Sim_Logo_Icon.png
+wwwroot\Assets\Image\Slider\Slider_1.png
+wwwroot\Assets\Image\Slider\Slider_2.png
+wwwroot\Assets\Image\Slider\Slider_3.png
+wwwroot\Assets\Script\carousel.js
+wwwroot\Assets\Script\lang.js
+wwwroot\Assets\Script\main-script.js
+wwwroot\Assets\Style\main-responsive.css
+wwwroot\Assets\Style\main-style.css
+D:\Project-Work\El-Sim\El-Sim New\.NET\El-Sim.NET\El-Sim.Web\wwwroot\Assets\Style\main-style.css
+D:\Project-Work\El-Sim\El-Sim New\.NET\El-Sim.NET\El-Sim.Web\wwwroot\Assets\Style\main-responsive.css
+D:\Project-Work\El-Sim\El-Sim New\.NET\El-Sim.NET\El-Sim.Web\wwwroot\Assets\Script\main-script.js
+D:\Project-Work\El-Sim\El-Sim New\.NET\El-Sim.NET\El-Sim.Web\wwwroot\Assets\Script\lang.js
+D:\Project-Work\El-Sim\El-Sim New\.NET\El-Sim.NET\El-Sim.Web\wwwroot\Assets\Script\carousel.js

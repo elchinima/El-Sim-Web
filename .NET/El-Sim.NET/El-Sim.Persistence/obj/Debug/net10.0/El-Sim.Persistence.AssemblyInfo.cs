@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("El-Sim.Persistence")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6674d49bc911db152ca11a4ddae798407a6cc016")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+953069f23dff65256d7bb03696a54cd83ded324f")]
 [assembly: System.Reflection.AssemblyProductAttribute("El-Sim.Persistence")]
 [assembly: System.Reflection.AssemblyTitleAttribute("El-Sim.Persistence")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

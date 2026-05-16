@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("El-Sim.Web")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8f690a9b64382100131621c8edf30600569c815e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+953069f23dff65256d7bb03696a54cd83ded324f")]
 [assembly: System.Reflection.AssemblyProductAttribute("El-Sim.Web")]
 [assembly: System.Reflection.AssemblyTitleAttribute("El-Sim.Web")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

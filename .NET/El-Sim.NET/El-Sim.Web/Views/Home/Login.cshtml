@@ -1,0 +1,68 @@
+﻿@{
+    ViewData["Title"] = "Login - El-Sim";
+}
+
+<main class="auth-shell">
+    <section class="auth-intro" aria-labelledby="auth-title">
+      <p class="eyebrow">secure access</p>
+      <h1 id="auth-title">Manage your<br>El-Sim profile</h1>
+      <p>Sign in with your FIN and password, or create a new profile before choosing and activating your digital SIM.
+      </p>
+
+      <div class="auth-badges" aria-label="Account benefits">
+        <span>Fast activation</span>
+        <span>Plan history</span>
+        <span>Support access</span>
+      </div>
+    </section>
+
+    <section class="auth-panel" aria-label="Login and registration">
+      <div class="auth-tabs" role="tablist" aria-label="Account forms">
+        <button class="auth-tab is-active" type="button" data-auth-target="login">Login</button>
+        <button class="auth-tab" type="button" data-auth-target="register">Register</button>
+      </div>
+
+      <form class="auth-form is-active" data-auth-form="login" aria-hidden="false" novalidate>
+        <div class="field">
+          <label for="login-fin">FIN</label>
+          <input id="login-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
+            pattern="[A-Za-z0-9]{7}" data-fin-input required>
+          <small>Exactly 7 English letters or digits.</small>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" autocomplete="current-password" data-password-input
+            required>
+        </div>
+
+        <button class="button button-primary auth-submit" type="submit">Login</button>
+        <p class="auth-message" aria-live="polite"></p>
+      </form>
+
+      <form class="auth-form" data-auth-form="register" aria-hidden="true" novalidate>
+        <div class="field">
+          <label for="register-name">Name</label>
+          <input id="register-name" name="name" type="text" autocomplete="given-name" required>
+        </div>
+
+        <div class="field">
+          <label for="register-fin">FIN</label>
+          <input id="register-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
+            pattern="[A-Za-z0-9]{7}" data-fin-input required>
+          <small>Exactly 7 English letters or digits.</small>
+        </div>
+
+        <div class="field">
+          <label for="register-password">Password</label>
+          <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8"
+            data-password-input required>
+          <small>Minimum 8 characters.</small>
+        </div>
+
+        <button class="button button-primary auth-submit" type="submit">Create account</button>
+        <p class="auth-message" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+

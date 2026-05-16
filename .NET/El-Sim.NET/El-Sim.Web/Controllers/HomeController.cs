@@ -11,7 +11,27 @@ namespace El_Sim.Web.Controllers
             return View();
         }
 
-        public IActionResult Privacy()
+        public IActionResult Plans()
+        {
+            return View();
+        }
+
+        public IActionResult Pass()
+        {
+            return View();
+        }
+
+        public IActionResult Global()
+        {
+            return View();
+        }
+
+        public IActionResult Wifi()
+        {
+            return View();
+        }
+
+        public IActionResult Login()
         {
             return View();
         }
