@@ -104,7 +104,6 @@ if (authPanel) {
         const message = form.querySelector(".auth-message");
 
         form.addEventListener("submit", (event) => {
-            event.preventDefault();
             const requiredInput = [...form.querySelectorAll("[required]")].find((input) => !input.value.trim());
             const finInput = form.querySelector("[data-fin-input]");
             const passwordInput = form.querySelector("[data-password-input]");
@@ -114,6 +113,7 @@ if (authPanel) {
             message.classList.remove("is-error");
 
             if (requiredInput) {
+                event.preventDefault();
                 const label = form.querySelector(`label[for="${requiredInput.id}"]`);
                 message.textContent = `${label ? label.textContent : "This field"} is required.`;
                 message.classList.add("is-error");
@@ -122,6 +122,7 @@ if (authPanel) {
             }
 
             if (!finPattern.test(finInput.value)) {
+                event.preventDefault();
                 message.textContent = "FIN must contain exactly 7 English letters or digits.";
                 message.classList.add("is-error");
                 finInput.focus();
@@ -129,16 +130,103 @@ if (authPanel) {
             }
 
             if (isRegister && passwordInput.value.length < 8) {
+                event.preventDefault();
                 message.textContent = "Password must be at least 8 characters.";
                 message.classList.add("is-error");
                 passwordInput.focus();
                 return;
             }
-
-            message.textContent = isRegister
-                ? "Registration data looks correct."
-                : "Login data looks correct.";
-            form.reset();
         });
     });
 }
+
+document.querySelectorAll(".file-drop-zone").forEach((dropZone) => {
+    const input = dropZone.querySelector('input[type="file"]');
+    const title = dropZone.querySelector(".file-drop-title");
+    const text = dropZone.querySelector(".file-drop-text");
+    const preview = dropZone.querySelector(".file-drop-preview");
+    const clearButton = dropZone.closest("form")?.querySelector("[data-clear-file]");
+    const defaultTitle = title?.textContent || "";
+    const defaultText = text?.textContent || "";
+    const defaultPreview = preview?.style.backgroundImage || "";
+    const maxFileSize = 2 * 1024 * 1024;
+    let previewUrl = "";
+
+    if (!input) {
+        return;
+    }
+
+    const setFileName = () => {
+        if (input.files?.length && input.files[0].size > maxFileSize) {
+            clearFile();
+            if (title) {
+                title.textContent = "File is larger than 2 MB";
+            }
+            return;
+        }
+
+        if (title && input.files?.length) {
+            title.textContent = input.files[0].name;
+        }
+
+        if (text && input.files?.length) {
+            text.textContent = "Hover to preview";
+        }
+
+        if (preview && input.files?.length) {
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
+            previewUrl = URL.createObjectURL(input.files[0]);
+            preview.style.backgroundImage = `url("${previewUrl}")`;
+        }
+    };
+
+    const clearFile = () => {
+        input.value = "";
+
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            previewUrl = "";
+        }
+
+        if (title) {
+            title.textContent = defaultTitle;
+        }
+
+        if (text) {
+            text.textContent = defaultText;
+        }
+
+        if (preview) {
+            preview.style.backgroundImage = defaultPreview;
+        }
+    };
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, (event) => {
+            event.preventDefault();
+            dropZone.classList.add("is-dragover");
+        });
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+        dropZone.addEventListener(eventName, () => {
+            dropZone.classList.remove("is-dragover");
+        });
+    });
+
+    dropZone.addEventListener("drop", (event) => {
+        event.preventDefault();
+
+        if (event.dataTransfer?.files?.length) {
+            input.files = event.dataTransfer.files;
+            setFileName();
+        }
+    });
+
+    input.addEventListener("change", setFileName);
+
+    clearButton?.addEventListener("click", clearFile);
+});

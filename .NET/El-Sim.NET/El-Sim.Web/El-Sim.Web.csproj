@@ -22,4 +22,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\El-Sim.Infrastucture\El-Sim.Infrastucture.csproj" />
+    <ProjectReference Include="..\El-Sim.Persistence\El-Sim.Persistence.csproj" />
+  </ItemGroup>
+
 </Project>

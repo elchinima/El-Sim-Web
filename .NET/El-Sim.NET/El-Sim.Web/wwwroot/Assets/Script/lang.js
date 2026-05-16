@@ -250,6 +250,70 @@ const translations = {
     }
 };
 
+Object.assign(translations.ru, {
+    "user profile": "\u043f\u0440\u043e\u0444\u0438\u043b\u044c",
+    "Profile image": "\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0444\u0438\u043b\u044f",
+    "Drop image here": "\u041f\u0435\u0440\u0435\u0442\u0430\u0449\u0438\u0442\u0435 \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u0441\u044e\u0434\u0430",
+    "or choose GIF, PNG, JPG": "\u0438\u043b\u0438 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 GIF, PNG, JPG",
+    "or choose GIF, PNG, JPG up to 2 MB": "\u0438\u043b\u0438 \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 GIF, PNG, JPG \u0434\u043e 2 \u041c\u0411",
+    "File is larger than 2 MB": "\u0424\u0430\u0439\u043b \u0431\u043e\u043b\u044c\u0448\u0435 2 \u041c\u0411",
+    "Profile image must be 2 MB or less.": "\u0418\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0444\u0438\u043b\u044f \u0434\u043e\u043b\u0436\u043d\u043e \u0431\u044b\u0442\u044c \u043d\u0435 \u0431\u043e\u043b\u044c\u0448\u0435 2 \u041c\u0411.",
+    "Hover to preview": "\u041d\u0430\u0432\u0435\u0434\u0438\u0442\u0435 \u0434\u043b\u044f \u043f\u0440\u0435\u0434\u043f\u0440\u043e\u0441\u043c\u043e\u0442\u0440\u0430",
+    "Clear field": "\u041e\u0447\u0438\u0441\u0442\u0438\u0442\u044c \u043f\u043e\u043b\u0435",
+    "Upload image": "\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c",
+    "Delete image": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435",
+    "Delete profile image?": "\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0444\u0438\u043b\u044f?",
+    "This will remove your current profile image.": "\u0422\u0435\u043a\u0443\u0449\u0435\u0435 \u0438\u0437\u043e\u0431\u0440\u0430\u0436\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0444\u0438\u043b\u044f \u0431\u0443\u0434\u0435\u0442 \u0443\u0434\u0430\u043b\u0435\u043d\u043e.",
+    "Cancel": "\u041e\u0442\u043c\u0435\u043d\u0430",
+    "Email": "Email",
+    "Enable 2FA by email": "\u0412\u043a\u043b\u044e\u0447\u0438\u0442\u044c 2FA \u043f\u043e email",
+    "Email notifications": "\u0423\u0432\u0435\u0434\u043e\u043c\u043b\u0435\u043d\u0438\u044f \u043d\u0430 email",
+    "Save profile": "\u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u043f\u0440\u043e\u0444\u0438\u043b\u044c",
+    "Created": "\u0421\u043e\u0437\u0434\u0430\u043d",
+    "Logout": "\u0412\u044b\u0439\u0442\u0438",
+    "Two-factor verification": "\u0414\u0432\u0443\u0445\u0444\u0430\u043a\u0442\u043e\u0440\u043d\u0430\u044f \u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430",
+    "email verification": "\u043f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 email",
+    "Enter your": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435",
+    "7-digit code": "7-\u0437\u043d\u0430\u0447\u043d\u044b\u0439 \u043a\u043e\u0434",
+    "Enter your 7-digit code": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 7-\u0437\u043d\u0430\u0447\u043d\u044b\u0439 \u043a\u043e\u0434",
+    "The code is valid for 15 minutes. Used and expired codes are removed automatically.": "\u041a\u043e\u0434 \u0434\u0435\u0439\u0441\u0442\u0432\u0443\u0435\u0442 15 \u043c\u0438\u043d\u0443\u0442. \u0418\u0441\u043f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u0438 \u0438\u0441\u0442\u0435\u043a\u0448\u0438\u0435 \u043a\u043e\u0434\u044b \u0443\u0434\u0430\u043b\u044f\u044e\u0442\u0441\u044f \u0430\u0432\u0442\u043e\u043c\u0430\u0442\u0438\u0447\u0435\u0441\u043a\u0438.",
+    "Code": "\u041a\u043e\u0434",
+    "Enter exactly 7 digits from the email.": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0440\u043e\u0432\u043d\u043e 7 \u0446\u0438\u0444\u0440 \u0438\u0437 email.",
+    "Verify": "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044c"
+});
+
+Object.assign(translations.az, {
+    "user profile": "istifad\u0259\u00e7i profili",
+    "Profile image": "Profil \u015f\u0259kli",
+    "Drop image here": "\u015e\u0259kli bura at\u0131n",
+    "or choose GIF, PNG, JPG": "v\u0259 ya GIF, PNG, JPG se\u00e7in",
+    "or choose GIF, PNG, JPG up to 2 MB": "v\u0259 ya 2 MB-d\u0259k GIF, PNG, JPG se\u00e7in",
+    "File is larger than 2 MB": "Fayl 2 MB-dan b\u00f6y\u00fckd\u00fcr",
+    "Profile image must be 2 MB or less.": "Profil \u015f\u0259kli 2 MB v\u0259 ya daha az olmal\u0131d\u0131r.",
+    "Hover to preview": "\u00d6n bax\u0131\u015f \u00fc\u00e7\u00fcn \u00fcst\u00fcn\u0259 g\u0259lin",
+    "Clear field": "Sah\u0259ni t\u0259mizl\u0259",
+    "Upload image": "\u015e\u0259kli y\u00fckl\u0259",
+    "Delete image": "\u015e\u0259kli sil",
+    "Delete profile image?": "Profil \u015f\u0259klini silm\u0259k ist\u0259yirsiniz?",
+    "This will remove your current profile image.": "Cari profil \u015f\u0259kliniz silin\u0259c\u0259k.",
+    "Cancel": "L\u0259\u011fv et",
+    "Email": "Email",
+    "Enable 2FA by email": "Email il\u0259 2FA aktiv et",
+    "Email notifications": "Email bildiri\u015fl\u0259ri",
+    "Save profile": "Profili saxla",
+    "Created": "Yarad\u0131l\u0131b",
+    "Logout": "\u00c7\u0131x\u0131\u015f",
+    "Two-factor verification": "\u0130ki faktorlu t\u0259sdiq",
+    "email verification": "email t\u0259sdiqi",
+    "Enter your": "Daxil edin",
+    "7-digit code": "7 r\u0259q\u0259mli kodu",
+    "Enter your 7-digit code": "7 r\u0259q\u0259mli kodu daxil edin",
+    "The code is valid for 15 minutes. Used and expired codes are removed automatically.": "Kod 15 d\u0259qiq\u0259 etibarl\u0131d\u0131r. \u0130stifad\u0259 edilmi\u015f v\u0259 vaxt\u0131 bitmi\u015f kodlar avtomatik silinir.",
+    "Code": "Kod",
+    "Enter exactly 7 digits from the email.": "Emaild\u0259ki d\u0259qiq 7 r\u0259q\u0259mi daxil edin.",
+    "Verify": "T\u0259sdiql\u0259"
+});
+
 const originalText = new WeakMap();
 
 const getTranslation = (text, language) => {
@@ -313,3 +377,42 @@ document.querySelectorAll("[data-lang-button]").forEach((button) => {
 });
 
 applyLanguage(savedLanguage);
+
+const profileImageConfirmModal = document.querySelector("[data-profile-image-confirm]");
+let pendingProfileImageDeleteForm = null;
+
+profileImageConfirmModal?.querySelector("[data-profile-confirm-cancel]")?.addEventListener("click", () => {
+    pendingProfileImageDeleteForm = null;
+    profileImageConfirmModal.close();
+});
+
+profileImageConfirmModal?.querySelector("[data-profile-confirm-delete]")?.addEventListener("click", () => {
+    const form = pendingProfileImageDeleteForm;
+    profileImageConfirmModal.close();
+    form?.requestSubmit();
+});
+
+document.querySelectorAll("[data-confirm-delete-image]").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+        if (pendingProfileImageDeleteForm === form) {
+            pendingProfileImageDeleteForm = null;
+            return;
+        }
+
+        event.preventDefault();
+
+        if (profileImageConfirmModal?.showModal) {
+            pendingProfileImageDeleteForm = form;
+            profileImageConfirmModal.showModal();
+            return;
+        }
+
+        const language = localStorage.getItem(languageStorageKey) || "en";
+        const message = getTranslation("Delete profile image?", language);
+
+        if (window.confirm(message)) {
+            pendingProfileImageDeleteForm = form;
+            form.requestSubmit();
+        }
+    });
+});

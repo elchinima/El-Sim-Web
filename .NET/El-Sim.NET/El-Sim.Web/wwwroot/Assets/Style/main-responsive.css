@@ -124,10 +124,15 @@
         flex-direction: column;
     }
 
-    .auth-shell {
+    .auth-shell,
+    .profile-shell {
         grid-template-columns: 1fr;
         gap: 30px;
         padding-top: 54px;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -147,6 +152,7 @@
     .device-strip,
     .support,
     .auth-shell,
+    .profile-shell,
     .site-footer {
         width: min(100% - 24px, 1120px);
     }
@@ -261,8 +267,33 @@
     .pass-card,
     .tariff-note,
     .auth-panel,
+    .profile-panel,
     .support {
         padding: 22px;
+    }
+
+    .profile-row {
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: center;
+        padding: 12px 14px;
+    }
+
+    .profile-row strong {
+        text-align: left;
+    }
+
+    .profile-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-image-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-head {
+        align-items: flex-start;
+        flex-direction: column;
     }
 
     .pass-hero {

@@ -1,0 +1,32 @@
+@model VerifyTwoFactorViewModel
+
+@{
+    ViewData["Title"] = "Two-factor verification - El-Sim";
+}
+
+<main class="auth-shell">
+  <section class="auth-intro" aria-labelledby="two-factor-title">
+    <p class="eyebrow">email verification</p>
+    <h1 id="two-factor-title">Enter your<br>7-digit code</h1>
+    <p>The code is valid for 15 minutes. Used and expired codes are removed automatically.</p>
+  </section>
+
+  <section class="auth-panel" aria-label="Two-factor verification">
+    <form class="auth-form is-active" method="post" asp-action="VerifyTwoFactor">
+      @Html.AntiForgeryToken()
+      <input asp-for="UserId" type="hidden">
+      @if (!ViewData.ModelState.IsValid)
+      {
+        <div class="auth-message is-error" asp-validation-summary="All"></div>
+      }
+
+      <div class="field">
+        <label for="two-factor-code">Code</label>
+        <input id="two-factor-code" asp-for="Code" inputmode="numeric" autocomplete="one-time-code" minlength="7" maxlength="7" pattern="[0-9]{7}" required>
+        <small>Enter exactly 7 digits from the email.</small>
+      </div>
+
+      <button class="button button-primary auth-submit" type="submit">Verify</button>
+    </form>
+  </section>
+</main>

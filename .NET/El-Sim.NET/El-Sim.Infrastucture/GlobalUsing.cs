@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace El_Sim.Infrastructure
-{
-    internal class GlobalUsing
-    {
-    }
-}
+global using SixLabors.ImageSharp;
+global using SixLabors.ImageSharp.Formats.Webp;
+global using SixLabors.ImageSharp.Processing;
+global using System;
+global using System.Collections.Generic;
+global using System.Text;

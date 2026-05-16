@@ -89,7 +89,14 @@
       </a>
     </nav>
 
-    <a class="header-action" href="/login">Login</a>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+      <a class="header-action" href="/profile">@User.Identity.Name</a>
+    }
+    else
+    {
+      <a class="header-action" href="/login">Login</a>
+    }
   </header>
 
   @RenderBody()

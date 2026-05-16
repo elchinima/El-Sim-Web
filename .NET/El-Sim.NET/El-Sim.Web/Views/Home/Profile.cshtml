@@ -1,0 +1,112 @@
+@model ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profile - El-Sim";
+}
+
+<main class="profile-shell">
+  <section class="profile-panel" aria-label="Profile details">
+    <div class="profile-head">
+      <div class="profile-avatar">
+        @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
+        {
+          <img src="@Model.ProfileImagePath" alt="@Model.Name">
+        }
+        else
+        {
+          <span>@(string.IsNullOrWhiteSpace(Model.Name) ? "E" : Model.Name[..1].ToUpperInvariant())</span>
+        }
+      </div>
+      <div>
+        <p class="eyebrow">user profile</p>
+        <h1 id="profile-title">@Model.Name</h1>
+      </div>
+    </div>
+
+    @if (TempData["ProfileError"] is string profileError)
+    {
+      <div class="auth-message is-error">@profileError</div>
+    }
+    @if (!ViewData.ModelState.IsValid)
+    {
+      <div class="auth-message is-error" asp-validation-summary="All"></div>
+    }
+
+    <div class="profile-grid">
+      <div class="profile-image-column">
+        <form class="profile-form" method="post" asp-action="UploadProfileImage" enctype="multipart/form-data">
+          @Html.AntiForgeryToken()
+          <div class="field">
+            <span class="field-label">Profile image</span>
+            <label class="file-drop-zone" for="profile-image">
+              <input id="profile-image" name="profileImage" type="file" accept=".gif,.png,.jpg,.jpeg,image/gif,image/png,image/jpeg">
+              <span class="file-drop-preview" style="@(string.IsNullOrWhiteSpace(Model.ProfileImagePath) ? "" : $"background-image:url('{Model.ProfileImagePath}')")"></span>
+              <span class="file-drop-title">Drop image here</span>
+              <span class="file-drop-text">or choose GIF, PNG, JPG up to 2 MB</span>
+            </label>
+          </div>
+          <div class="profile-image-actions">
+            <button class="button button-secondary" type="button" data-clear-file>Clear field</button>
+            <button class="button button-primary" type="submit">Upload image</button>
+          </div>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ProfileImagePath))
+        {
+          <form class="profile-delete-form" method="post" asp-action="DeleteProfileImage" data-confirm-delete-image>
+            @Html.AntiForgeryToken()
+            <button class="button button-secondary" type="submit">Delete image</button>
+          </form>
+        }
+      </div>
+
+      <form class="profile-form" method="post" asp-action="Profile">
+        @Html.AntiForgeryToken()
+        <div class="field">
+          <label for="profile-name">Name</label>
+          <input id="profile-name" name="Name" value="@Model.Name" maxlength="25" required>
+        </div>
+        <div class="field">
+          <label for="profile-email">Email</label>
+          <input id="profile-email" name="Email" value="@Model.Email" type="email" autocomplete="email">
+        </div>
+        <label class="remember-field" for="profile-two-factor">
+          <input id="profile-two-factor" name="IsTwoFactorEnabled" type="checkbox" value="true" @(Model.IsTwoFactorEnabled ? "checked" : "")>
+          <span>Enable 2FA by email</span>
+        </label>
+        <input name="IsTwoFactorEnabled" type="hidden" value="false">
+        <label class="remember-field" for="profile-notifications">
+          <input id="profile-notifications" name="IsEmailNotificationsEnabled" type="checkbox" value="true" @(Model.IsEmailNotificationsEnabled ? "checked" : "")>
+          <span>Email notifications</span>
+        </label>
+        <input name="IsEmailNotificationsEnabled" type="hidden" value="false">
+        <button class="button button-primary" type="submit">Save profile</button>
+      </form>
+    </div>
+
+    <div class="profile-row">
+      <span>FIN</span>
+      <strong>@Model.Fin</strong>
+    </div>
+    <div class="profile-row">
+      <span>Created</span>
+      <strong>@Model.CreatedDate</strong>
+    </div>
+
+    <div class="profile-actions">
+      <a class="button button-primary" href="/plans">Plans</a>
+      <a class="button button-secondary" href="/logout">Logout</a>
+    </div>
+  </section>
+
+  <dialog class="profile-confirm-modal" data-profile-image-confirm>
+    <form method="dialog" class="profile-confirm-box">
+      <h2>Delete profile image?</h2>
+      <p>This will remove your current profile image.</p>
+      <div class="profile-confirm-actions">
+        <button class="button button-secondary" type="button" value="cancel" data-profile-confirm-cancel>Cancel</button>
+        <button class="button button-primary" type="button" value="confirm" data-profile-confirm-delete>Delete image</button>
+      </div>
+    </form>
+  </dialog>
+</main>
