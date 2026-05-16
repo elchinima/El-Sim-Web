@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "VUo40sEV1v8=",
+  "success": true,
+  "projectFilePath": "D:\\Project-Work\\El-Sim\\El-Sim New\\.NET\\El-Sim.NET\\El-Sim.Infrastucture\\El-Sim.Infrastucture.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\dmatc\\.nuget\\packages\\bcrypt.net-next\\4.2.0\\bcrypt.net-next.4.2.0.nupkg.sha512",
+    "C:\\Users\\dmatc\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\dmatc\\.nuget\\packages\\stripe.net\\51.1.0\\stripe.net.51.1.0.nupkg.sha512",
+    "C:\\Users\\dmatc\\.nuget\\packages\\system.configuration.configurationmanager\\9.0.0\\system.configuration.configurationmanager.9.0.0.nupkg.sha512",
+    "C:\\Users\\dmatc\\.nuget\\packages\\system.diagnostics.eventlog\\9.0.0\\system.diagnostics.eventlog.9.0.0.nupkg.sha512",
+    "C:\\Users\\dmatc\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.0\\system.security.cryptography.protecteddata.9.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

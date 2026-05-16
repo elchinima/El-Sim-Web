@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="El-Sim.Application/El-Sim.Application.csproj" />
+    <Project Path="El-Sim.Domain/El-Sim.Domain.csproj" />
+    <Project Path="El-Sim.Infrastucture/El-Sim.Infrastucture.csproj" />
+    <Project Path="El-Sim.Persistence/El-Sim.Persistence.csproj" />
+    <Project Path="El-Sim.Web/El-Sim.Web.csproj" />
+  </Folder>
+</Solution>
