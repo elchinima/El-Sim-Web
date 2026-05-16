@@ -19,8 +19,8 @@
     --pink: #ff3f73;
     --coral: #ff5367;
     --radius: 18px;
-    --font-head: "Syne", sans-serif;
-    --font-body: "DM Sans", sans-serif;
+    --font-head: "Segoe UI", Arial, sans-serif;
+    --font-body: "Segoe UI", Arial, sans-serif;
 }
 
 html {
@@ -71,6 +71,13 @@ a {
 .site-header,
 .top-slider,
 .hero,
+.pass-hero,
+.pass-grid,
+.tariff-grid,
+.tariff-note,
+.tariff-details,
+.wifi-grid,
+.global-grid,
 .section,
 .device-strip,
 .support,
@@ -408,7 +415,6 @@ h3 {
 .button-primary {
     color: #11151a;
     background: linear-gradient(135deg, var(--cyan), var(--blue));
-    box-shadow: 0 16px 42px rgba(28, 168, 255, 0.28);
 }
 
 .button-secondary {
@@ -665,7 +671,7 @@ h3 {
 .steps-grid,
 .plans-grid {
     display: grid;
-    gap: 18px;
+    gap: 36px;
 }
 
 .steps-grid {
@@ -842,21 +848,41 @@ h3 {
     background: transparent;
     font: 800 14px var(--font-head);
     cursor: pointer;
+    transition: color 0.2s ease, background 0.25s ease, transform 0.2s ease;
 }
 
 .auth-tab.is-active {
     color: #11151a;
     background: linear-gradient(135deg, var(--cyan), var(--blue));
+    transform: translateY(-1px);
 }
 
 .auth-form {
-    display: none;
+    display: grid;
     gap: 16px;
-    margin-top: 24px;
+    max-height: 0;
+    margin-top: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(16px);
+    transition: max-height 0.45s ease, margin-top 0.3s ease, opacity 0.28s ease, transform 0.28s ease;
 }
 
 .auth-form.is-active {
-    display: grid;
+    max-height: 540px;
+    margin-top: 24px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+.auth-form[data-auth-form="login"] {
+    transform: translateX(-16px);
+}
+
+.auth-form[data-auth-form="login"].is-active {
+    transform: translateX(0);
 }
 
 .field {
@@ -911,11 +937,226 @@ h3 {
     color: #ff8ca7;
 }
 
+.pass-hero {
+    padding: 86px 0 34px;
+}
+
+.pass-hero h1 {
+    font-size: clamp(52px, 8vw, 96px);
+}
+
+.pass-hero p:not(.eyebrow) {
+    max-width: 640px;
+    margin-top: 20px;
+    color: var(--muted);
+    font-size: 19px;
+}
+
+.pass-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+    align-items: stretch;
+}
+
+.tariff-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+    align-items: stretch;
+}
+
+.wifi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 36px;
+    align-items: stretch;
+}
+
+.global-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 36px;
+    align-items: stretch;
+}
+
+.tariff-note {
+    display: grid;
+    grid-template-columns: 1.1fr 1.2fr 1.4fr;
+    gap: 18px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding: 26px 30px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: linear-gradient(160deg, var(--panel-strong), rgba(255, 255, 255, 0.045));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(18px);
+}
+
+.tariff-note h2 {
+    font-size: clamp(24px, 3vw, 34px);
+}
+
+.tariff-note p {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.tariff-note strong {
+    color: var(--cyan);
+    font-family: var(--font-head);
+    font-size: clamp(20px, 2.4vw, 30px);
+    line-height: 1.15;
+}
+
+.pass-card {
+    position: relative;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    min-height: 560px;
+    padding: 30px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: linear-gradient(160deg, var(--panel-strong), rgba(255, 255, 255, 0.045));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px rgba(0, 0, 0, 0.18);
+    backdrop-filter: blur(18px);
+}
+
+.pass-card::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    border-radius: inherit;
+    background: inherit;
+}
+
+.pass-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    height: auto;
+    padding-top: 3px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--violet), var(--cyan), var(--pink));
+    pointer-events: none;
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+}
+
+.pass-card.is-featured {
+    background:
+        radial-gradient(circle at 75% 12%, rgba(55, 217, 255, 0.22), transparent 32%),
+        linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+    border-color: rgba(55, 217, 255, 0.36);
+}
+
+.favorite-badge {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 1;
+    transform: translate(-50%, -50%);
+    padding: 7px 12px;
+    border: 1px solid rgba(55, 217, 255, 0.42);
+    border-radius: 999px;
+    color: var(--cyan);
+    background: rgba(18, 22, 28, 0.96);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+
+.pass-card h2 {
+    font-size: clamp(28px, 3vw, 40px);
+}
+
+.pass-price {
+    margin-top: 16px;
+    color: var(--text);
+    font-family: var(--font-head);
+    font-size: 24px;
+    font-weight: 800;
+}
+
+.pass-price span {
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.pass-card ul {
+    display: grid;
+    gap: 12px;
+    margin: 28px 0 30px;
+    padding: 0;
+    color: var(--muted);
+    list-style: none;
+}
+
+.pass-card li {
+    position: relative;
+    padding-left: 24px;
+}
+
+.pass-card li::before {
+    content: "";
+    position: absolute;
+    top: 0.65em;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    box-shadow: 0 0 18px rgba(55, 217, 255, 0.32);
+}
+
+.pass-card .plan-link {
+    margin-top: auto;
+}
+
+.tariff-card {
+    min-height: 380px;
+}
+
+.tariff-details {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 36px;
+    margin-top: 88px;
+}
+
+.tariff-info-card {
+    min-height: 320px;
+}
+
+.wifi-card {
+    min-height: 360px;
+}
+
+.global-card {
+    min-height: 300px;
+}
+
+.wifi-note {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: 88px;
+    margin-bottom: 0;
+}
+
 .site-footer {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 18px;
+    flex-wrap: wrap;
     padding: 36px 0 42px;
     color: rgba(247, 251, 255, 0.62);
     font-size: 14px;
@@ -926,4 +1167,30 @@ h3 {
     color: var(--text);
     font-family: var(--font-head);
     font-weight: 800;
+}
+
+.language-switch {
+    display: inline-flex;
+    gap: 6px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.055);
+}
+
+.language-switch button {
+    min-width: 42px;
+    min-height: 34px;
+    border: 0;
+    border-radius: 10px;
+    color: var(--muted);
+    background: transparent;
+    font: 800 12px var(--font-head);
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.2s ease;
+}
+
+.language-switch button.is-active {
+    color: #11151a;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
 }

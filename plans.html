@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - El-Sim</title>
+  <title>Plans - El-Sim</title>
   <link rel="icon" type="image/png" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
   <link rel="apple-touch-icon" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
   <link
@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="./Assets/Style/main-responsive.css">
   <script defer src="./Assets/Script/main-script.js"></script>
   <script defer src="./Assets/Script/lang.js"></script>
-  <script defer src="./Assets/Script/carousel.js"></script>
 </head>
 
 <body>
@@ -89,70 +88,132 @@
       </a>
     </nav>
 
-    <a class="header-action" href="./index.html">Home</a>
+    <a class="header-action" href="./login.html">Login</a>
   </header>
 
-  <main class="auth-shell">
-    <section class="auth-intro" aria-labelledby="auth-title">
-      <p class="eyebrow">secure access</p>
-      <h1 id="auth-title">Manage your<br>El-Sim profile</h1>
-      <p>Sign in with your FIN and password, or create a new profile before choosing and activating your digital SIM.
-      </p>
-
-      <div class="auth-badges" aria-label="Account benefits">
-        <span>Fast activation</span>
-        <span>Plan history</span>
-        <span>Support access</span>
-      </div>
+  <main>
+    <section class="pass-hero" aria-labelledby="plans-title">
+      <p class="eyebrow">tariffs</p>
+      <h1 id="plans-title">Plans</h1>
+      <p>Choose a monthly package with local minutes, local SMS, and mobile internet for everyday connection.</p>
     </section>
 
-    <section class="auth-panel" aria-label="Login and registration">
-      <div class="auth-tabs" role="tablist" aria-label="Account forms">
-        <button class="auth-tab is-active" type="button" data-auth-target="login">Login</button>
-        <button class="auth-tab" type="button" data-auth-target="register">Register</button>
+    <section class="tariff-note" aria-label="eSIM prices and discount">
+      <div>
+        <h2>eSIM price</h2>
+        <p>Exclusive 030 - 300 AZN</p>
       </div>
+      <div>
+        <p>033 - 100 AZN</p>
+        <p>037 - 30 AZN</p>
+        <p>035 - 15 AZN</p>
+      </div>
+      <strong>50% off all plans for the first month</strong>
+    </section>
 
-      <form class="auth-form is-active" data-auth-form="login" aria-hidden="false" novalidate>
-        <div class="field">
-          <label for="login-fin">FIN</label>
-          <input id="login-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
-            pattern="[A-Za-z0-9]{7}" data-fin-input required>
-          <small>Exactly 7 English letters or digits.</small>
+    <section class="tariff-grid" aria-label="Tariff packages">
+      <article class="pass-card tariff-card">
+        <div>
+          <h2>Eco</h2>
+          <p class="pass-price">3.00 AZN <span>| 30 days</span></p>
         </div>
+        <ul>
+          <li>1GB internet</li>
+          <li>30 free domestic minutes</li>
+          <li>30 free domestic SMS</li>
+        </ul>
+        <a class="plan-link" href="#">Choose Eco</a>
+      </article>
 
-        <div class="field">
-          <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password" autocomplete="current-password" data-password-input
-            required>
+      <article class="pass-card tariff-card is-featured">
+        <span class="favorite-badge">Favorite</span>
+        <div>
+          <h2>Standard</h2>
+          <p class="pass-price">8.00 AZN <span>| 30 days</span></p>
         </div>
+        <ul>
+          <li>5GB internet</li>
+          <li>50 free domestic minutes</li>
+          <li>50 free domestic SMS</li>
+        </ul>
+        <a class="plan-link" href="#">Choose Standard</a>
+      </article>
 
-        <button class="button button-primary auth-submit" type="submit">Login</button>
-        <p class="auth-message" aria-live="polite"></p>
-      </form>
-
-      <form class="auth-form" data-auth-form="register" aria-hidden="true" novalidate>
-        <div class="field">
-          <label for="register-name">Name</label>
-          <input id="register-name" name="name" type="text" autocomplete="given-name" required>
+      <article class="pass-card tariff-card">
+        <div>
+          <h2>Plus</h2>
+          <p class="pass-price">18.00 AZN <span>| 30 days</span></p>
         </div>
+        <ul>
+          <li>15GB internet</li>
+          <li>150 free domestic minutes</li>
+          <li>150 free domestic SMS</li>
+        </ul>
+        <a class="plan-link" href="#">Choose Plus</a>
+      </article>
 
-        <div class="field">
-          <label for="register-fin">FIN</label>
-          <input id="register-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
-            pattern="[A-Za-z0-9]{7}" data-fin-input required>
-          <small>Exactly 7 English letters or digits.</small>
+      <article class="pass-card tariff-card is-featured">
+        <span class="favorite-badge">Favorite</span>
+        <div>
+          <h2>Pro</h2>
+          <p class="pass-price">28.00 AZN <span>| 30 days</span></p>
         </div>
+        <ul>
+          <li>35GB internet</li>
+          <li>350 free domestic minutes</li>
+          <li>350 free domestic SMS</li>
+        </ul>
+        <a class="plan-link" href="#">Choose Pro</a>
+      </article>
 
-        <div class="field">
-          <label for="register-password">Password</label>
-          <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8"
-            data-password-input required>
-          <small>Minimum 8 characters.</small>
+      <article class="pass-card tariff-card">
+        <div>
+          <h2>Premium</h2>
+          <p class="pass-price">48.00 AZN <span>| 30 days</span></p>
         </div>
+        <ul>
+          <li>80GB internet</li>
+          <li>800 free domestic minutes</li>
+          <li>800 free domestic SMS</li>
+        </ul>
+        <a class="plan-link" href="#">Choose Premium</a>
+      </article>
 
-        <button class="button button-primary auth-submit" type="submit">Create account</button>
-        <p class="auth-message" aria-live="polite"></p>
-      </form>
+      <article class="pass-card tariff-card">
+        <div>
+          <h2>Ultra</h2>
+          <p class="pass-price">78.00 AZN <span>| 30 days</span></p>
+        </div>
+        <ul>
+          <li>120GB internet</li>
+          <li>1200 free domestic minutes</li>
+          <li>1200 free domestic SMS</li>
+        </ul>
+        <a class="plan-link" href="#">Choose Ultra</a>
+      </article>
+    </section>
+
+    <section class="tariff-details" aria-label="Pay as you go and speeds">
+      <article class="pass-card tariff-info-card">
+        <h2>No Plan</h2>
+        <ul>
+          <li>1 min - 0.20 AZN</li>
+          <li>1 MB - 0.20 AZN, 4G+</li>
+          <li>1 AZN - 7 days of all-network access</li>
+        </ul>
+      </article>
+
+      <article class="pass-card tariff-info-card">
+        <h2>Speeds</h2>
+        <ul>
+          <li>4G+ - up to 150 mbit/s (until 06.2026)</li>
+          <li>4.5G - up to 250 mbit/s (until 01.2027)</li>
+          <li>4.5G+ - up to 350 mbit/s</li>
+          <li>5G - up to 850 mbit/s</li>
+          <li>5G+ Beta from 06.2026 (only Ahmadli)</li>
+          <li>5G+ - up to 1500 mbit/s</li>
+        </ul>
+      </article>
     </section>
   </main>
 

@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - El-Sim</title>
+  <title>Wi-Fi - El-Sim</title>
   <link rel="icon" type="image/png" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
   <link rel="apple-touch-icon" href="./Assets/Image/Logo/El-Sim_Favicon_Large.png">
   <link
@@ -14,7 +14,6 @@
   <link rel="stylesheet" href="./Assets/Style/main-responsive.css">
   <script defer src="./Assets/Script/main-script.js"></script>
   <script defer src="./Assets/Script/lang.js"></script>
-  <script defer src="./Assets/Script/carousel.js"></script>
 </head>
 
 <body>
@@ -89,70 +88,72 @@
       </a>
     </nav>
 
-    <a class="header-action" href="./index.html">Home</a>
+    <a class="header-action" href="./login.html">Login</a>
   </header>
 
-  <main class="auth-shell">
-    <section class="auth-intro" aria-labelledby="auth-title">
-      <p class="eyebrow">secure access</p>
-      <h1 id="auth-title">Manage your<br>El-Sim profile</h1>
-      <p>Sign in with your FIN and password, or create a new profile before choosing and activating your digital SIM.
-      </p>
-
-      <div class="auth-badges" aria-label="Account benefits">
-        <span>Fast activation</span>
-        <span>Plan history</span>
-        <span>Support access</span>
-      </div>
+  <main>
+    <section class="pass-hero" aria-labelledby="wifi-title">
+      <p class="eyebrow">fiber internet</p>
+      <h1 id="wifi-title">Optical Internet</h1>
+      <p>High-speed home and business connectivity with modern Wi-Fi standards and optional static IP.</p>
     </section>
 
-    <section class="auth-panel" aria-label="Login and registration">
-      <div class="auth-tabs" role="tablist" aria-label="Account forms">
-        <button class="auth-tab is-active" type="button" data-auth-target="login">Login</button>
-        <button class="auth-tab" type="button" data-auth-target="register">Register</button>
+    <section class="wifi-grid" aria-label="Optical internet packages">
+      <article class="pass-card wifi-card">
+        <div>
+          <h2>Optic 1S</h2>
+          <p class="pass-price">100.00 AZN</p>
+        </div>
+        <ul>
+          <li>Up to 1 GBit/s</li>
+          <li>Minimum Wi-Fi 6</li>
+        </ul>
+        <a class="plan-link" href="#">Choose 1S</a>
+      </article>
+
+      <article class="pass-card wifi-card">
+        <div>
+          <h2>Optic 1.5S</h2>
+          <p class="pass-price">230.00 AZN</p>
+        </div>
+        <ul>
+          <li>Up to 5 GBit/s</li>
+          <li>Minimum Wi-Fi 6E</li>
+        </ul>
+        <a class="plan-link" href="#">Choose 1.5S</a>
+      </article>
+
+      <article class="pass-card wifi-card is-featured">
+        <div>
+          <h2>Optic 2S</h2>
+          <p class="pass-price">450.00 AZN</p>
+        </div>
+        <ul>
+          <li>Up to 10 GBit/s</li>
+          <li>Minimum Wi-Fi 7</li>
+        </ul>
+        <a class="plan-link" href="#">Choose 2S</a>
+      </article>
+
+      <article class="pass-card wifi-card">
+        <div>
+          <h2>Optic 2S+</h2>
+          <p class="pass-price">800.00 AZN</p>
+        </div>
+        <ul>
+          <li>Up to 20 GBit/s</li>
+          <li>Minimum Wi-Fi 7</li>
+        </ul>
+        <a class="plan-link" href="#">Choose 2S+</a>
+      </article>
+    </section>
+
+    <section class="tariff-note wifi-note" aria-label="Static IP">
+      <div>
+        <h2>Static IP</h2>
+        <p>Add a static IP to any optical internet package.</p>
       </div>
-
-      <form class="auth-form is-active" data-auth-form="login" aria-hidden="false" novalidate>
-        <div class="field">
-          <label for="login-fin">FIN</label>
-          <input id="login-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
-            pattern="[A-Za-z0-9]{7}" data-fin-input required>
-          <small>Exactly 7 English letters or digits.</small>
-        </div>
-
-        <div class="field">
-          <label for="login-password">Password</label>
-          <input id="login-password" name="password" type="password" autocomplete="current-password" data-password-input
-            required>
-        </div>
-
-        <button class="button button-primary auth-submit" type="submit">Login</button>
-        <p class="auth-message" aria-live="polite"></p>
-      </form>
-
-      <form class="auth-form" data-auth-form="register" aria-hidden="true" novalidate>
-        <div class="field">
-          <label for="register-name">Name</label>
-          <input id="register-name" name="name" type="text" autocomplete="given-name" required>
-        </div>
-
-        <div class="field">
-          <label for="register-fin">FIN</label>
-          <input id="register-fin" name="fin" type="text" inputmode="text" autocomplete="username" maxlength="7"
-            pattern="[A-Za-z0-9]{7}" data-fin-input required>
-          <small>Exactly 7 English letters or digits.</small>
-        </div>
-
-        <div class="field">
-          <label for="register-password">Password</label>
-          <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8"
-            data-password-input required>
-          <small>Minimum 8 characters.</small>
-        </div>
-
-        <button class="button button-primary auth-submit" type="submit">Create account</button>
-        <p class="auth-message" aria-live="polite"></p>
-      </form>
+      <strong>+5%</strong>
     </section>
   </main>
 

@@ -109,7 +109,13 @@
     }
 
     .steps-grid,
-    .plans-grid {
+    .plans-grid,
+    .pass-grid,
+    .tariff-grid,
+    .wifi-grid,
+    .global-grid,
+    .tariff-note,
+    .tariff-details {
         grid-template-columns: 1fr;
     }
 
@@ -130,6 +136,13 @@
     .site-header,
     .top-slider,
     .hero,
+    .pass-hero,
+    .pass-grid,
+    .tariff-grid,
+    .wifi-grid,
+    .global-grid,
+    .tariff-note,
+    .tariff-details,
     .section,
     .device-strip,
     .support,
@@ -172,6 +185,7 @@
     .top-slider {
         margin-top: 24px;
         border-radius: 22px;
+        aspect-ratio: 3 / 4;
     }
 
     .top-slider::after {
@@ -179,7 +193,8 @@
     }
 
     .slider-slide {
-        min-height: 390px;
+        min-height: 0;
+        height: 100%;
     }
 
     .slider-content {
@@ -243,9 +258,19 @@
 
     .info-card,
     .plan-card,
+    .pass-card,
+    .tariff-note,
     .auth-panel,
     .support {
         padding: 22px;
+    }
+
+    .pass-hero {
+        padding-top: 56px;
+    }
+
+    .pass-card {
+        min-height: auto;
     }
 
     .site-footer {

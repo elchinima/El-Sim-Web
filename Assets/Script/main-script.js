@@ -82,8 +82,11 @@ if (authPanel) {
             const isActive = form.dataset.authForm === target;
             form.classList.toggle("is-active", isActive);
             form.setAttribute("aria-hidden", String(!isActive));
+            form.inert = !isActive;
         });
     };
+
+    showForm(tabs.find((tab) => tab.classList.contains("is-active"))?.dataset.authTarget || "login");
 
     finInputs.forEach((input) => {
         input.addEventListener("input", () => {
