@@ -124,14 +124,52 @@
         flex-direction: column;
     }
 
+    .admin-navbar {
+        grid-template-columns: 1fr;
+        justify-items: stretch;
+    }
+
+    .admin-nav-links {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .admin-nav-links a,
+    .admin-exit {
+        width: 100%;
+    }
+
+    .admin-exit {
+        justify-self: stretch;
+    }
+
     .auth-shell,
-    .profile-shell {
+    .profile-shell,
+    .admin-shell {
         grid-template-columns: 1fr;
         gap: 30px;
         padding-top: 54px;
     }
 
     .profile-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-hero,
+    .admin-panel-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-user-card {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-search {
         grid-template-columns: 1fr;
     }
 }
@@ -153,12 +191,43 @@
     .support,
     .auth-shell,
     .profile-shell,
+    .admin-shell,
     .site-footer {
         width: min(100% - 24px, 1120px);
     }
 
     .brand span {
         display: none;
+    }
+
+    .admin-navbar {
+        top: 10px;
+        width: min(100% - 24px, 1120px);
+        gap: 10px;
+        padding: 10px;
+        border-radius: 18px;
+    }
+
+    .admin-brand span {
+        display: inline;
+    }
+
+    .admin-brand img {
+        width: 38px;
+        height: 38px;
+    }
+
+    .admin-nav-links {
+        gap: 5px;
+        padding: 5px;
+    }
+
+    .admin-nav-links a,
+    .admin-exit {
+        min-width: 0;
+        min-height: 36px;
+        padding: 0 10px;
+        font-size: 13px;
     }
 
     .header-action {
@@ -294,6 +363,21 @@
     .profile-head {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .admin-stats,
+    .admin-actions,
+    .admin-chart-row {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-chart-row strong {
+        text-align: left;
+    }
+
+    .admin-panel,
+    .admin-user-card {
+        padding: 22px;
     }
 
     .pass-hero {

@@ -1,0 +1,101 @@
+@model AdminDashboardViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Users - El-Sim Admin";
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-users-title">
+    <div>
+      <p class="eyebrow">accounts</p>
+      <h1 id="admin-users-title">Users</h1>
+      <p>Manage account access and two-factor security.</p>
+    </div>
+    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+  </section>
+
+  @if (TempData["AdminError"] is string adminError)
+  {
+    <div class="admin-message is-error">@adminError</div>
+  }
+
+  <section class="admin-panel" aria-label="User management">
+    <div class="admin-panel-head">
+      <div>
+        <p class="eyebrow">registered accounts</p>
+        <h2>All users</h2>
+      </div>
+      <span>@Model.Users.Count of @Model.TotalUsers accounts</span>
+    </div>
+
+    <form class="admin-search" method="get" asp-action="Users">
+      <div class="field">
+        <label for="admin-user-search">Search user</label>
+        <input id="admin-user-search" name="search" value="@Model.SearchQuery" placeholder="Name, FIN or email">
+      </div>
+      <button class="button button-primary" type="submit">Search</button>
+      @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+      {
+        <a class="button button-secondary" href="/admin/users">Clear</a>
+      }
+    </form>
+
+    <div class="admin-users">
+      @foreach (var user in Model.Users)
+      {
+        <article class="admin-user-card @(user.IsBlocked ? "is-blocked" : "")">
+          <div class="admin-user-main">
+            <div class="profile-avatar admin-avatar">
+              @if (!string.IsNullOrWhiteSpace(user.ProfileImagePath))
+              {
+                <img src="@user.ProfileImagePath" alt="@user.Name">
+              }
+              else
+              {
+                <span>@(string.IsNullOrWhiteSpace(user.Name) ? "E" : user.Name[..1].ToUpperInvariant())</span>
+              }
+            </div>
+            <div>
+              <h3>@user.Name</h3>
+              <p>@user.Fin | @user.CreatedDate</p>
+              @if (!string.IsNullOrWhiteSpace(user.Email))
+              {
+                <p>@user.Email</p>
+              }
+            </div>
+          </div>
+
+          <div class="admin-flags">
+            <span class="@(user.IsAdmin ? "is-on" : "")">Admin</span>
+            <span class="@(user.IsBlocked ? "is-danger" : "is-on")">@(user.IsBlocked ? "Blocked" : "Active")</span>
+            <span class="@(user.IsTwoFactorEnabled ? "is-on" : "")">2FA</span>
+            <span class="@(user.IsEmailNotificationsEnabled ? "is-on" : "")">Email</span>
+          </div>
+
+          <div class="admin-actions">
+            <form id="admin-2fa-@user.Id" method="post" asp-action="ToggleTwoFactor" asp-route-id="@user.Id" asp-route-search="@Model.SearchQuery">
+              @Html.AntiForgeryToken()
+              <button class="button button-secondary" type="button" data-open-confirm-form="admin-2fa-@user.Id" data-confirm-title="Confirm 2FA change" data-confirm-message="@(user.IsTwoFactorEnabled ? "Disable 2FA for this user?" : "Enable 2FA for this user?")" data-confirm-button="Confirm">@(user.IsTwoFactorEnabled ? "Disable 2FA" : "Enable 2FA")</button>
+            </form>
+            <form id="admin-block-@user.Id" method="post" asp-action="ToggleBlock" asp-route-id="@user.Id" asp-route-search="@Model.SearchQuery">
+              @Html.AntiForgeryToken()
+              <button class="button @(user.IsBlocked ? "button-secondary" : "button-danger")" type="button" data-open-confirm-form="admin-block-@user.Id" data-confirm-title="Confirm user access" data-confirm-message="@(user.IsBlocked ? "Unblock this user?" : "Block this user?")" data-confirm-button="@(user.IsBlocked ? "Unblock" : "Block")">@(user.IsBlocked ? "Unblock" : "Block")</button>
+            </form>
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <dialog class="profile-confirm-modal admin-confirm-modal" data-confirm-modal>
+    <form method="dialog" class="profile-confirm-box">
+      <h2 data-confirm-title>Confirm action?</h2>
+      <p data-confirm-text></p>
+      <div class="profile-confirm-actions">
+        <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel>Cancel</button>
+        <button class="button button-primary" type="button" value="confirm" data-confirm-submit>Confirm</button>
+      </div>
+    </form>
+  </dialog>
+</main>

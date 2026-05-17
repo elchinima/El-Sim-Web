@@ -407,12 +407,14 @@ document.querySelectorAll("[data-confirm-delete-image]").forEach((form) => {
             return;
         }
 
-        const language = localStorage.getItem(languageStorageKey) || "en";
-        const message = getTranslation("Delete profile image?", language);
-
-        if (window.confirm(message)) {
-            pendingProfileImageDeleteForm = form;
-            form.requestSubmit();
-        }
+        window.showConfirmModal?.({
+            message: getTranslation("Delete profile image?", localStorage.getItem(languageStorageKey) || "en"),
+            button: getTranslation("Delete image", localStorage.getItem(languageStorageKey) || "en")
+        }).then((confirmed) => {
+            if (confirmed) {
+                pendingProfileImageDeleteForm = form;
+                form.requestSubmit();
+            }
+        });
     });
 });

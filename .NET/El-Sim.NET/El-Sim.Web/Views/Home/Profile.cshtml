@@ -60,7 +60,7 @@
         }
       </div>
 
-      <form class="profile-form" method="post" asp-action="Profile">
+      <form class="profile-form" method="post" asp-action="Profile" data-confirm-two-factor data-two-factor-original="@Model.IsTwoFactorEnabled.ToString().ToLowerInvariant()">
         @Html.AntiForgeryToken()
         <div class="field">
           <label for="profile-name">Name</label>

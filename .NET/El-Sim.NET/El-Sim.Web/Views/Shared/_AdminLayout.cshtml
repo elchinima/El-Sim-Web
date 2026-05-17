@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@ViewData["Title"]</title>
+  <link rel="icon" type="image/png" href="/Assets/Image/Logo/El-Sim_Favicon_Large.png">
+  <link rel="apple-touch-icon" href="/Assets/Image/Logo/El-Sim_Favicon_Large.png">
+  <link rel="stylesheet" href="/Assets/Style/main-style.css">
+  <link rel="stylesheet" href="/Assets/Style/main-responsive.css">
+  <script defer src="/Assets/Script/main-script.js"></script>
+</head>
+
+<body class="admin-body">
+  <header class="admin-navbar">
+    <a class="admin-brand" href="/admin/dashboard" aria-label="El-Sim admin">
+      <img src="/Assets/Image/Logo/El-Sim_Logo_Icon.png" alt="El-Sim">
+      <span>El-Sim Admin</span>
+    </a>
+
+    <nav class="admin-nav-links" aria-label="Admin navigation">
+      <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "is-active" : "")" href="/admin/dashboard">
+        <span>Dashboard</span>
+      </a>
+      <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "is-active" : "")" href="/admin/users">
+        <span>Users</span>
+      </a>
+    </nav>
+
+    <a class="admin-exit" href="/">Site</a>
+  </header>
+
+  @RenderBody()
+</body>
+
+</html>

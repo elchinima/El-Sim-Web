@@ -72,6 +72,12 @@ namespace El_Sim.Web.Controllers
                 return View(new AuthPageViewModel { Login = login, ActiveForm = "login" });
             }
 
+            if (user.IsBlocked)
+            {
+                ModelState.AddModelError(string.Empty, "Your account is blocked.");
+                return View(new AuthPageViewModel { Login = login, ActiveForm = "login" });
+            }
+
             if (user.IsTwoFactorEnabled)
             {
                 if (string.IsNullOrWhiteSpace(user.Email))
@@ -334,9 +340,56 @@ namespace El_Sim.Web.Controllers
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        public IActionResult Error(int? id)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            var exceptionFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+            var statusCodeFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Diagnostics.IStatusCodeReExecuteFeature>();
+            var statusCode = id
+                ?? statusCodeFeature?.OriginalStatusCode
+                ?? (exceptionFeature is not null ? StatusCodes.Status500InternalServerError : HttpContext.Response.StatusCode);
+
+            if (statusCode < StatusCodes.Status400BadRequest)
+            {
+                statusCode = StatusCodes.Status500InternalServerError;
+            }
+
+            HttpContext.Response.StatusCode = statusCode;
+
+            return View(new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                StatusCode = statusCode,
+                Title = GetErrorTitle(statusCode),
+                Message = GetErrorMessage(statusCode)
+            });
+        }
+
+        private static string GetErrorTitle(int statusCode)
+        {
+            return statusCode switch
+            {
+                StatusCodes.Status400BadRequest => "Bad signal",
+                StatusCodes.Status401Unauthorized => "Login required",
+                StatusCodes.Status403Forbidden => "Access blocked",
+                StatusCodes.Status404NotFound => "Page not found",
+                StatusCodes.Status500InternalServerError => "Connection interrupted",
+                StatusCodes.Status503ServiceUnavailable => "Service unavailable",
+                _ => "Unexpected error"
+            };
+        }
+
+        private static string GetErrorMessage(int statusCode)
+        {
+            return statusCode switch
+            {
+                StatusCodes.Status400BadRequest => "The request reached El-Sim with missing or invalid data.",
+                StatusCodes.Status401Unauthorized => "Please sign in again to continue using this page.",
+                StatusCodes.Status403Forbidden => "Your account does not have access to this area.",
+                StatusCodes.Status404NotFound => "The page may have moved, expired, or never existed.",
+                StatusCodes.Status500InternalServerError => "Our server could not finish the request. The team can use the code below to trace it.",
+                StatusCodes.Status503ServiceUnavailable => "El-Sim is temporarily unavailable. Please try again in a moment.",
+                _ => "The request could not be completed. Please try again or return home."
+            };
         }
 
         private async Task SignInUser(AppUser user, bool rememberMe)
@@ -345,7 +398,8 @@ namespace El_Sim.Web.Controllers
             {
                 new(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
                 new(ClaimTypes.Name, user.Name),
-                new("fin", user.Fin)
+                new("fin", user.Fin),
+                new("is-admin", user.IsAdmin.ToString(CultureInfo.InvariantCulture))
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -388,7 +442,7 @@ namespace El_Sim.Web.Controllers
 
             try
             {
-                await _emailSender.SendAsync(user.Email!, "El-Sim verification code", $"Your El-Sim verification code is {code}. It expires in 15 minutes.");
+                await _emailSender.SendAsync(user.Email!, "El-Sim verification code", BuildTwoFactorEmail(user.Name, code), true);
             }
             catch
             {
@@ -397,6 +451,47 @@ namespace El_Sim.Web.Controllers
                 await _dbContext.SaveChangesAsync();
                 throw;
             }
+        }
+
+        private static string BuildTwoFactorEmail(string name, string code)
+        {
+            var safeName = WebUtility.HtmlEncode(name);
+            var safeCode = WebUtility.HtmlEncode(code);
+
+            return $"""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>El-Sim verification</title>
+                </head>
+                <body style="margin:0;background:#14181c;color:#f7fbff;font-family:Segoe UI,Arial,sans-serif;">
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:linear-gradient(135deg,#34393a,#14181c);padding:32px 14px;">
+                    <tr>
+                      <td align="center">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;border:1px solid rgba(255,255,255,.16);border-radius:24px;overflow:hidden;background:rgba(255,255,255,.08);">
+                          <tr>
+                            <td style="height:5px;background:linear-gradient(90deg,#37d9ff,#1ca8ff,#ff3f73);"></td>
+                          </tr>
+                          <tr>
+                            <td style="padding:34px 30px 28px;">
+                              <div style="font-size:13px;font-weight:800;text-transform:uppercase;color:#37d9ff;">El-Sim security</div>
+                              <h1 style="margin:10px 0 12px;font-size:32px;line-height:1.12;color:#f7fbff;">Verification code</h1>
+                              <p style="margin:0 0 24px;color:#b9c5cc;font-size:16px;line-height:1.6;">Hi {safeName}, use this code to finish signing in to your El-Sim account.</p>
+                              <div style="padding:18px 20px;border-radius:18px;background:#0d1116;border:1px solid rgba(55,217,255,.28);text-align:center;">
+                                <div style="font-size:38px;line-height:1.1;font-weight:800;letter-spacing:6px;color:#37d9ff;">{safeCode}</div>
+                              </div>
+                              <p style="margin:22px 0 0;color:#b9c5cc;font-size:14px;line-height:1.6;">This code expires in 15 minutes. If you did not request it, you can ignore this message.</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """;
         }
 
         private async Task DeleteExpiredTwoFactorCodes()

@@ -1,0 +1,82 @@
+@model AdminDashboardViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Dashboard - El-Sim Admin";
+    var chartTotal = Math.Max(Model.TotalUsers, 1);
+    var adminPercent = Model.AdminUsers * 100 / chartTotal;
+    var blockedPercent = Model.BlockedUsers * 100 / chartTotal;
+    var twoFactorPercent = Model.TwoFactorUsers * 100 / chartTotal;
+    var emailPercent = Model.EmailNotificationUsers * 100 / chartTotal;
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-title">
+    <div>
+      <p class="eyebrow">control center</p>
+      <h1 id="admin-title">Dashboard</h1>
+      <p>Overview of users, security and current verification activity.</p>
+    </div>
+    <a class="button button-secondary" href="/admin/users">Manage users</a>
+  </section>
+
+  <section class="admin-stats" aria-label="Admin stats">
+    <article>
+      <span>Total users</span>
+      <strong>@Model.TotalUsers</strong>
+    </article>
+    <article>
+      <span>Admins</span>
+      <strong>@Model.AdminUsers</strong>
+    </article>
+    <article>
+      <span>Blocked</span>
+      <strong>@Model.BlockedUsers</strong>
+    </article>
+    <article>
+      <span>2FA enabled</span>
+      <strong>@Model.TwoFactorUsers</strong>
+    </article>
+    <article>
+      <span>Email alerts</span>
+      <strong>@Model.EmailNotificationUsers</strong>
+    </article>
+    <article>
+      <span>Pending codes</span>
+      <strong>@Model.PendingTwoFactorCodes</strong>
+    </article>
+  </section>
+
+  <section class="admin-panel admin-chart-panel" aria-label="User statistics chart">
+    <div class="admin-panel-head">
+      <div>
+        <p class="eyebrow">statistics</p>
+        <h2>User activity</h2>
+      </div>
+      <span>@Model.TotalUsers total</span>
+    </div>
+
+    <div class="admin-chart">
+      <div class="admin-chart-row">
+        <span>Admins</span>
+        <div class="admin-chart-track"><span style="width:@adminPercent%"></span></div>
+        <strong>@Model.AdminUsers</strong>
+      </div>
+      <div class="admin-chart-row">
+        <span>Blocked</span>
+        <div class="admin-chart-track"><span style="width:@blockedPercent%"></span></div>
+        <strong>@Model.BlockedUsers</strong>
+      </div>
+      <div class="admin-chart-row">
+        <span>2FA enabled</span>
+        <div class="admin-chart-track"><span style="width:@twoFactorPercent%"></span></div>
+        <strong>@Model.TwoFactorUsers</strong>
+      </div>
+      <div class="admin-chart-row">
+        <span>Email alerts</span>
+        <div class="admin-chart-track"><span style="width:@emailPercent%"></span></div>
+        <strong>@Model.EmailNotificationUsers</strong>
+      </div>
+    </div>
+  </section>
+</main>

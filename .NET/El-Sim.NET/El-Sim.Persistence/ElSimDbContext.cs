@@ -21,6 +21,8 @@ public class ElSimDbContext : DbContext
             entity.HasIndex(user => user.Fin).IsUnique();
             entity.Property(user => user.Email).HasMaxLength(254);
             entity.Property(user => user.ProfileImagePath).HasMaxLength(260);
+            entity.Property(user => user.IsAdmin).HasDefaultValue(false);
+            entity.Property(user => user.IsBlocked).HasDefaultValue(false);
             entity.Property(user => user.IsTwoFactorEnabled).HasDefaultValue(false);
             entity.Property(user => user.IsEmailNotificationsEnabled).HasDefaultValue(false);
             entity.Property(user => user.PasswordHash).HasMaxLength(128).IsRequired();

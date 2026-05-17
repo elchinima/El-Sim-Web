@@ -11,8 +11,8 @@
     <p>The code is valid for 15 minutes. Used and expired codes are removed automatically.</p>
   </section>
 
-  <section class="auth-panel" aria-label="Two-factor verification">
-    <form class="auth-form is-active" method="post" asp-action="VerifyTwoFactor">
+  <section class="auth-panel verify-panel" aria-label="Two-factor verification">
+    <form class="verify-form" method="post" asp-action="VerifyTwoFactor">
       @Html.AntiForgeryToken()
       <input asp-for="UserId" type="hidden">
       @if (!ViewData.ModelState.IsValid)
@@ -22,7 +22,7 @@
 
       <div class="field">
         <label for="two-factor-code">Code</label>
-        <input id="two-factor-code" asp-for="Code" inputmode="numeric" autocomplete="one-time-code" minlength="7" maxlength="7" pattern="[0-9]{7}" required>
+        <input class="verify-code-input" id="two-factor-code" asp-for="Code" inputmode="numeric" autocomplete="one-time-code" minlength="7" maxlength="7" pattern="[0-9]{7}" placeholder="0000000" autofocus required>
         <small>Enter exactly 7 digits from the email.</small>
       </div>
 

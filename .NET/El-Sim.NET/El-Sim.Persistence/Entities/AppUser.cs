@@ -7,6 +7,8 @@ public class AppUser
     public string Fin { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? ProfileImagePath { get; set; }
+    public bool IsAdmin { get; set; }
+    public bool IsBlocked { get; set; }
     public bool IsTwoFactorEnabled { get; set; }
     public bool IsEmailNotificationsEnabled { get; set; }
     public string PasswordHash { get; set; } = string.Empty;

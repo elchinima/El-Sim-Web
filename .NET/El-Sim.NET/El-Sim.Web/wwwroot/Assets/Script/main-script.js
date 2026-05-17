@@ -230,3 +230,148 @@ document.querySelectorAll(".file-drop-zone").forEach((dropZone) => {
 
     clearButton?.addEventListener("click", clearFile);
 });
+
+const getConfirmDialog = () => {
+    let dialog = document.querySelector("[data-confirm-modal]");
+
+    if (dialog) {
+        return dialog;
+    }
+
+    dialog = document.createElement("dialog");
+    dialog.className = "profile-confirm-modal";
+    dialog.dataset.confirmModal = "";
+    dialog.innerHTML = `
+        <form method="dialog" class="profile-confirm-box">
+            <h2 data-confirm-title>Confirm action?</h2>
+            <p data-confirm-text></p>
+            <div class="profile-confirm-actions">
+                <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel>Cancel</button>
+                <button class="button button-primary" type="button" value="confirm" data-confirm-submit>Confirm</button>
+            </div>
+        </form>
+    `;
+    document.body.append(dialog);
+
+    return dialog;
+};
+
+const showConfirmModal = ({ title = "Confirm action?", message, button = "Confirm" }) => {
+    const dialog = getConfirmDialog();
+    const titleElement = dialog.querySelector("[data-confirm-title]");
+    const textElement = dialog.querySelector("[data-confirm-text]");
+    const cancelButton = dialog.querySelector("[data-confirm-cancel]");
+    const submitButton = dialog.querySelector("[data-confirm-submit]");
+
+    titleElement.textContent = title;
+    textElement.textContent = message;
+    submitButton.textContent = button;
+
+    return new Promise((resolve) => {
+        const cleanup = () => {
+            cancelButton.removeEventListener("click", cancel);
+            submitButton.removeEventListener("click", confirm);
+            dialog.removeEventListener("cancel", cancel);
+            dialog.removeEventListener("close", close);
+        };
+        const close = () => {
+            cleanup();
+            resolve(dialog.returnValue === "confirm");
+        };
+        const cancel = (event) => {
+            event?.preventDefault();
+            dialog.returnValue = "cancel";
+            dialog.close("cancel");
+        };
+        const confirm = () => {
+            dialog.returnValue = "confirm";
+            dialog.close("confirm");
+        };
+
+        cancelButton.addEventListener("click", cancel);
+        submitButton.addEventListener("click", confirm);
+        dialog.addEventListener("cancel", cancel);
+        dialog.addEventListener("close", close);
+        dialog.showModal();
+    });
+};
+
+window.showConfirmModal = showConfirmModal;
+
+document.querySelectorAll("[data-open-confirm-form]").forEach((button) => {
+    button.addEventListener("click", async () => {
+        const form = document.getElementById(button.dataset.openConfirmForm);
+
+        if (!form) {
+            return;
+        }
+
+        const confirmed = await showConfirmModal({
+            title: button.dataset.confirmTitle || "Confirm action?",
+            message: button.dataset.confirmMessage,
+            button: button.dataset.confirmButton || "Confirm"
+        });
+
+        if (confirmed) {
+            form.requestSubmit();
+        }
+    });
+});
+
+document.querySelectorAll("[data-confirm-message]").forEach((form) => {
+    form.addEventListener("submit", async (event) => {
+        if (form.dataset.confirmed === "true") {
+            delete form.dataset.confirmed;
+            return;
+        }
+
+        event.preventDefault();
+
+        const confirmed = await showConfirmModal({
+            title: form.dataset.confirmTitle || "Confirm action?",
+            message: form.dataset.confirmMessage,
+            button: form.dataset.confirmButton || "Confirm"
+        });
+
+        if (confirmed) {
+            form.dataset.confirmed = "true";
+            form.requestSubmit();
+        }
+    });
+});
+
+document.querySelectorAll("[data-confirm-two-factor]").forEach((form) => {
+    const checkbox = form.querySelector('input[name="IsTwoFactorEnabled"][type="checkbox"]');
+
+    if (!checkbox) {
+        return;
+    }
+
+    form.addEventListener("submit", async (event) => {
+        if (form.dataset.confirmed === "true") {
+            delete form.dataset.confirmed;
+            return;
+        }
+
+        const original = form.dataset.twoFactorOriginal === "true";
+
+        if (checkbox.checked === original) {
+            return;
+        }
+
+        const message = checkbox.checked ? "Enable 2FA for your account?" : "Disable 2FA for your account?";
+        const button = checkbox.checked ? "Enable 2FA" : "Disable 2FA";
+
+        event.preventDefault();
+
+        const confirmed = await showConfirmModal({
+            message,
+            button
+        });
+
+        if (confirmed) {
+            form.dataset.confirmed = "true";
+            form.requestSubmit();
+        }
+    });
+});
