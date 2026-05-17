@@ -1,62 +1,40 @@
-﻿@{
+@model ProductCategoryPageViewModel
+
+@{
     ViewData["Title"] = "WI-FI - El-Sim";
 }
 
 <main>
     <section class="pass-hero" aria-labelledby="wifi-title">
-      <p class="eyebrow">fiber internet</p>
+      <p class="eyebrow">@Model.Eyebrow</p>
       <h1 id="wifi-title">Optical Internet</h1>
-      <p>High-speed home and business connectivity with modern Wi-Fi standards and optional static IP.</p>
+      <p>@Model.Description</p>
     </section>
 
     <section class="wifi-grid" aria-label="Optical internet packages">
-      <article class="pass-card wifi-card">
-        <div>
-          <h2>Optic 1S</h2>
-          <p class="pass-price">100.00 AZN</p>
-        </div>
-        <ul>
-          <li>Up to 1 GBit/s</li>
-          <li>Minimum Wi-Fi 6</li>
-        </ul>
-        <a class="plan-link" href="#">Choose 1S</a>
-      </article>
-
-      <article class="pass-card wifi-card">
-        <div>
-          <h2>Optic 1.5S</h2>
-          <p class="pass-price">230.00 AZN</p>
-        </div>
-        <ul>
-          <li>Up to 5 GBit/s</li>
-          <li>Minimum Wi-Fi 6E</li>
-        </ul>
-        <a class="plan-link" href="#">Choose 1.5S</a>
-      </article>
-
-      <article class="pass-card wifi-card is-featured">
-        <div>
-          <h2>Optic 2S</h2>
-          <p class="pass-price">450.00 AZN</p>
-        </div>
-        <ul>
-          <li>Up to 10 GBit/s</li>
-          <li>Minimum Wi-Fi 7</li>
-        </ul>
-        <a class="plan-link" href="#">Choose 2S</a>
-      </article>
-
-      <article class="pass-card wifi-card">
-        <div>
-          <h2>Optic 2S+</h2>
-          <p class="pass-price">800.00 AZN</p>
-        </div>
-        <ul>
-          <li>Up to 20 GBit/s</li>
-          <li>Minimum Wi-Fi 7</li>
-        </ul>
-        <a class="plan-link" href="#">Choose 2S+</a>
-      </article>
+      @foreach (var product in Model.Products)
+      {
+        <article class="pass-card wifi-card @(product.IsFeatured ? "is-featured" : "")">
+          @if (product.IsFavorite)
+          {
+            <span class="favorite-badge">Favorite</span>
+          }
+          <div>
+            <h2 data-product-i18n data-lang-en="@product.Name" data-lang-ru="@(string.IsNullOrWhiteSpace(product.NameRu) ? product.Name : product.NameRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.NameAz) ? product.Name : product.NameAz)">@product.Name</h2>
+            <p class="pass-price"><span data-product-i18n data-lang-en="@product.Price" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PriceRu) ? product.Price : product.PriceRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PriceAz) ? product.Price : product.PriceAz)">@product.Price</span> @if (!string.IsNullOrWhiteSpace(product.Period)) { <span>| </span><span data-product-i18n data-lang-en="@product.Period" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PeriodRu) ? product.Period : product.PeriodRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PeriodAz) ? product.Period : product.PeriodAz)">@product.Period</span> }</p>
+          </div>
+          <ul>
+            @for (var featureIndex = 0; featureIndex < product.Features.Count; featureIndex++)
+            {
+              var feature = product.Features[featureIndex];
+              var featureRu = product.FeaturesRu.Count > featureIndex ? product.FeaturesRu[featureIndex] : feature;
+              var featureAz = product.FeaturesAz.Count > featureIndex ? product.FeaturesAz[featureIndex] : feature;
+              <li data-product-i18n data-lang-en="@feature" data-lang-ru="@featureRu" data-lang-az="@featureAz">@feature</li>
+            }
+          </ul>
+          <a class="plan-link" href="#" data-product-i18n data-lang-en="@product.ButtonText" data-lang-ru="@(string.IsNullOrWhiteSpace(product.ButtonTextRu) ? product.ButtonText : product.ButtonTextRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.ButtonTextAz) ? product.ButtonText : product.ButtonTextAz)">@product.ButtonText</a>
+        </article>
+      }
     </section>
 
     <section class="tariff-note wifi-note" aria-label="Static IP">
@@ -67,4 +45,3 @@
       <strong>+5%</strong>
     </section>
   </main>
-

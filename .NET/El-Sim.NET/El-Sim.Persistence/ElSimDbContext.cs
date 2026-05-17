@@ -8,6 +8,7 @@ public class ElSimDbContext : DbContext
 
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<TwoFactorCode> TwoFactorCodes => Set<TwoFactorCode>();
+    public DbSet<Product> Products => Set<Product>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +44,37 @@ public class ElSimDbContext : DbContext
                 .WithMany(user => user.TwoFactorCodes)
                 .HasForeignKey(code => code.AppUserId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.ToTable("Products");
+            entity.HasKey(product => product.Id);
+            entity.Property(product => product.Id).ValueGeneratedOnAdd();
+            entity.Property(product => product.Category).HasMaxLength(32).IsRequired();
+            entity.Property(product => product.Name).HasMaxLength(80).IsRequired();
+            entity.Property(product => product.NameRu).HasMaxLength(80);
+            entity.Property(product => product.NameAz).HasMaxLength(80);
+            entity.Property(product => product.Price).HasMaxLength(40).IsRequired();
+            entity.Property(product => product.PriceRu).HasMaxLength(40);
+            entity.Property(product => product.PriceAz).HasMaxLength(40);
+            entity.Property(product => product.Period).HasMaxLength(40);
+            entity.Property(product => product.PeriodRu).HasMaxLength(40);
+            entity.Property(product => product.PeriodAz).HasMaxLength(40);
+            entity.Property(product => product.Description).HasMaxLength(260);
+            entity.Property(product => product.DescriptionRu).HasMaxLength(260);
+            entity.Property(product => product.DescriptionAz).HasMaxLength(260);
+            entity.Property(product => product.Features).IsRequired();
+            entity.Property(product => product.FeaturesRu);
+            entity.Property(product => product.FeaturesAz);
+            entity.Property(product => product.ButtonText).HasMaxLength(80).IsRequired();
+            entity.Property(product => product.ButtonTextRu).HasMaxLength(80);
+            entity.Property(product => product.ButtonTextAz).HasMaxLength(80);
+            entity.Property(product => product.ButtonUrl).HasMaxLength(2048);
+            entity.Property(product => product.IsFeatured).HasDefaultValue(false);
+            entity.Property(product => product.IsFavorite).HasDefaultValue(false);
+            entity.Property(product => product.SortOrder).IsRequired();
+            entity.HasIndex(product => new { product.Category, product.SortOrder });
         });
     }
 }

@@ -318,10 +318,42 @@ document.querySelectorAll("[data-open-confirm-form]").forEach((button) => {
     });
 });
 
+document.querySelectorAll("[data-product-modal-open]").forEach((button) => {
+    button.addEventListener("click", () => {
+        const dialog = document.getElementById(button.dataset.productModalOpen);
+
+        if (dialog?.showModal) {
+            dialog.showModal();
+            document.body.classList.add("modal-open");
+        }
+    });
+});
+
+document.querySelectorAll("[data-product-modal-close]").forEach((button) => {
+    button.addEventListener("click", () => {
+        button.closest("dialog")?.close();
+    });
+});
+
+document.querySelectorAll(".admin-product-modal").forEach((dialog) => {
+    dialog.addEventListener("close", () => {
+        if (!document.querySelector(".admin-product-modal[open]")) {
+            document.body.classList.remove("modal-open");
+        }
+    });
+});
+
 document.querySelectorAll("[data-confirm-message]").forEach((form) => {
     form.addEventListener("submit", async (event) => {
         if (form.dataset.confirmed === "true") {
             delete form.dataset.confirmed;
+            return;
+        }
+
+        const submitter = event.submitter;
+
+        if (form.matches("[data-save-products-form]") && !submitter?.matches("[data-save-products-button]")) {
+            event.preventDefault();
             return;
         }
 
@@ -335,7 +367,11 @@ document.querySelectorAll("[data-confirm-message]").forEach((form) => {
 
         if (confirmed) {
             form.dataset.confirmed = "true";
-            form.requestSubmit();
+            if (submitter) {
+                form.requestSubmit(submitter);
+            } else {
+                form.requestSubmit();
+            }
         }
     });
 });

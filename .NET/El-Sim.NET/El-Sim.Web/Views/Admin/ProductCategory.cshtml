@@ -1,0 +1,185 @@
+@model AdminProductEditorViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = $"{Model.Title} Products - El-Sim Admin";
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-product-category-title">
+    <div>
+      <p class="eyebrow">catalog</p>
+      <h1 id="admin-product-category-title">@Model.Title</h1>
+      <p>@Model.Description</p>
+    </div>
+    <div class="admin-hero-actions">
+      <form method="post" asp-action="AddProduct" asp-route-category="@Model.Category">
+        @Html.AntiForgeryToken()
+        <button class="button button-primary" type="submit">Add product</button>
+      </form>
+      <a class="button button-secondary" href="/admin/products">All products</a>
+    </div>
+  </section>
+
+  @if (TempData["AdminMessage"] is string adminMessage)
+  {
+    <div class="admin-message">@adminMessage</div>
+  }
+
+  <form method="post" asp-action="ProductCategory" class="admin-product-form" data-confirm-message="Save product changes?" data-confirm-button="Save" data-save-products-form>
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Category">
+
+    <section class="admin-products-editor" aria-label="@Model.Title products">
+      @for (var index = 0; index < Model.Products.Count; index++)
+      {
+        <article class="admin-product-row">
+          <input type="hidden" asp-for="Products[index].Id">
+          <div>
+            <span>EN</span>
+            <strong>@Model.Products[index].Name</strong>
+            <p>@Model.Products[index].Price @if (!string.IsNullOrWhiteSpace(Model.Products[index].Period)) { <span>| @Model.Products[index].Period</span> }</p>
+          </div>
+          <div class="admin-product-row-flags">
+            <label class="admin-featured-toggle">
+              <input asp-for="Products[index].IsFeatured">
+              <span>Featured</span>
+            </label>
+            <label class="admin-featured-toggle">
+              <input asp-for="Products[index].IsFavorite">
+              <span>Favorite</span>
+            </label>
+          </div>
+          <div class="admin-product-row-actions">
+            <button class="button button-secondary" type="button" data-product-modal-open="product-modal-@Model.Products[index].Id">Details</button>
+            <button class="button button-danger" type="submit" form="delete-product-@Model.Products[index].Id">Delete</button>
+          </div>
+        </article>
+
+        <dialog class="admin-product-modal" id="product-modal-@Model.Products[index].Id">
+          <div class="admin-product-modal-box">
+            <div class="admin-panel-head">
+              <div>
+                <p class="eyebrow">product @(index + 1)</p>
+                <h2>@Model.Products[index].Name</h2>
+              </div>
+              <button class="button button-secondary" type="button" data-product-modal-close>Close</button>
+            </div>
+
+            <div class="admin-product-fields">
+              <div class="field">
+                <label asp-for="Products[index].SortOrder">Sort order</label>
+                <input asp-for="Products[index].SortOrder" type="number">
+              </div>
+              <div class="field admin-field-wide">
+                <label asp-for="Products[index].ButtonUrl">Button URL</label>
+                <input asp-for="Products[index].ButtonUrl">
+              </div>
+
+              <section class="admin-language-fields admin-field-wide" aria-label="English product fields">
+                <h3>English</h3>
+                <div class="admin-product-fields">
+                  <div class="field">
+                    <label asp-for="Products[index].Name">Name</label>
+                    <input asp-for="Products[index].Name">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].Price">Price</label>
+                    <input asp-for="Products[index].Price">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].Period">Period</label>
+                    <input asp-for="Products[index].Period">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].ButtonText">Button text</label>
+                    <input asp-for="Products[index].ButtonText">
+                  </div>
+                  <div class="field admin-field-wide">
+                    <label asp-for="Products[index].Description">Description</label>
+                    <input asp-for="Products[index].Description">
+                  </div>
+                  <div class="field admin-field-wide">
+                    <label asp-for="Products[index].Features">Features</label>
+                    <textarea asp-for="Products[index].Features" rows="6"></textarea>
+                  </div>
+                </div>
+              </section>
+
+              <section class="admin-language-fields admin-field-wide" aria-label="Russian product fields">
+                <h3>Russian</h3>
+                <div class="admin-product-fields">
+                  <div class="field">
+                    <label asp-for="Products[index].NameRu">Name RU</label>
+                    <input asp-for="Products[index].NameRu">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].PriceRu">Price RU</label>
+                    <input asp-for="Products[index].PriceRu">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].PeriodRu">Period RU</label>
+                    <input asp-for="Products[index].PeriodRu">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].ButtonTextRu">Button text RU</label>
+                    <input asp-for="Products[index].ButtonTextRu">
+                  </div>
+                  <div class="field admin-field-wide">
+                    <label asp-for="Products[index].DescriptionRu">Description RU</label>
+                    <input asp-for="Products[index].DescriptionRu">
+                  </div>
+                  <div class="field admin-field-wide">
+                    <label asp-for="Products[index].FeaturesRu">Features RU</label>
+                    <textarea asp-for="Products[index].FeaturesRu" rows="6"></textarea>
+                  </div>
+                </div>
+              </section>
+
+              <section class="admin-language-fields admin-field-wide" aria-label="Azerbaijani product fields">
+                <h3>Azerbaijani</h3>
+                <div class="admin-product-fields">
+                  <div class="field">
+                    <label asp-for="Products[index].NameAz">Name AZ</label>
+                    <input asp-for="Products[index].NameAz">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].PriceAz">Price AZ</label>
+                    <input asp-for="Products[index].PriceAz">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].PeriodAz">Period AZ</label>
+                    <input asp-for="Products[index].PeriodAz">
+                  </div>
+                  <div class="field">
+                    <label asp-for="Products[index].ButtonTextAz">Button text AZ</label>
+                    <input asp-for="Products[index].ButtonTextAz">
+                  </div>
+                  <div class="field admin-field-wide">
+                    <label asp-for="Products[index].DescriptionAz">Description AZ</label>
+                    <input asp-for="Products[index].DescriptionAz">
+                  </div>
+                  <div class="field admin-field-wide">
+                    <label asp-for="Products[index].FeaturesAz">Features AZ</label>
+                    <textarea asp-for="Products[index].FeaturesAz" rows="6"></textarea>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </dialog>
+      }
+    </section>
+
+    <div class="admin-sticky-actions">
+      <button class="button button-primary" type="submit" name="saveProducts" value="true" data-save-products-button>Save products</button>
+    </div>
+  </form>
+
+  @foreach (var product in Model.Products)
+  {
+    <form id="delete-product-@product.Id" method="post" asp-action="DeleteProduct" asp-route-id="@product.Id" asp-route-category="@Model.Category" data-confirm-message="Delete this product?" data-confirm-button="Delete">
+      @Html.AntiForgeryToken()
+    </form>
+  }
+</main>

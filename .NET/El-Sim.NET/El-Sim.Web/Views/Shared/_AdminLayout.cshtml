@@ -26,6 +26,9 @@
       <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "is-active" : "")" href="/admin/users">
         <span>Users</span>
       </a>
+      <a class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "ProductCategory") ? "is-active" : "")" href="/admin/products">
+        <span>Products</span>
+      </a>
     </nav>
 
     <a class="admin-exit" href="/">Site</a>

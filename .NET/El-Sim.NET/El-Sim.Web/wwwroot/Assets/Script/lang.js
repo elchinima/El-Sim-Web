@@ -336,13 +336,19 @@ const getTranslation = (text, language) => {
 
 const applyLanguage = (language) => {
     const currentLanguage = translations[language] || language === "en" ? language : "en";
+
+    document.querySelectorAll("[data-product-i18n]").forEach((element) => {
+        const fallback = element.dataset.langEn || element.textContent.trim();
+        element.textContent = element.dataset[`lang${currentLanguage.charAt(0).toUpperCase()}${currentLanguage.slice(1)}`] || fallback;
+    });
+
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
 
     while (walker.nextNode()) {
         const node = walker.currentNode;
         const parent = node.parentElement;
 
-        if (!parent || ["SCRIPT", "STYLE", "SVG"].includes(parent.tagName)) {
+        if (!parent || ["SCRIPT", "STYLE", "SVG"].includes(parent.tagName) || parent.closest("[data-product-i18n]")) {
             continue;
         }
 

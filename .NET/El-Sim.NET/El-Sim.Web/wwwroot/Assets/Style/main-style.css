@@ -739,6 +739,7 @@ h3 {
 
 .plans-grid {
     grid-template-columns: repeat(3, 1fr);
+    align-items: start;
 }
 
 .info-card,
@@ -796,6 +797,14 @@ h3 {
 }
 
 .price span {
+    color: var(--text);
+    font-family: var(--font-head);
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.price [data-product-i18n] {
     color: var(--text);
     font-family: var(--font-head);
     font-size: 58px;
@@ -1030,7 +1039,7 @@ h3 {
 }
 
 input[type="checkbox"] {
-    accent-color: #0d1116;
+    accent-color: var(--cyan);
 }
 
 .auth-submit {
@@ -1494,6 +1503,7 @@ input[type="checkbox"] {
     position: absolute;
     inset: 0 0 auto;
     height: 3px;
+    border-radius: inherit;
     background: linear-gradient(90deg, var(--violet), var(--cyan), var(--pink));
 }
 
@@ -1677,6 +1687,231 @@ input[type="checkbox"] {
 .admin-actions form,
 .admin-actions button {
     width: 100%;
+}
+
+.admin-product-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.admin-product-category {
+    display: grid;
+    gap: 12px;
+    min-height: 190px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(160deg, var(--panel-strong), rgba(255, 255, 255, 0.045));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px rgba(0, 0, 0, 0.18);
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.admin-product-category:hover {
+    transform: translateY(-3px);
+    border-color: rgba(55, 217, 255, 0.38);
+    background: linear-gradient(160deg, rgba(55, 217, 255, 0.12), rgba(255, 255, 255, 0.055));
+}
+
+.admin-product-category span {
+    font-family: var(--font-head);
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.admin-product-category p {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+.admin-product-category strong {
+    align-self: end;
+    color: var(--cyan);
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.admin-product-form {
+    display: grid;
+    gap: 18px;
+}
+
+.admin-products-editor {
+    display: grid;
+    gap: 18px;
+}
+
+.admin-product-row {
+    display: grid;
+    grid-template-columns: minmax(240px, 1fr) auto auto;
+    align-items: center;
+    gap: 18px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(160deg, var(--panel-strong), rgba(255, 255, 255, 0.045));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 24px 70px rgba(0, 0, 0, 0.18);
+}
+
+.admin-product-row strong {
+    display: block;
+    margin-top: 4px;
+    font-family: var(--font-head);
+    font-size: 28px;
+    line-height: 1.12;
+}
+
+.admin-product-row p,
+.admin-product-row span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.admin-product-row-actions,
+.admin-product-row-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.modal-open {
+    overflow: hidden;
+}
+
+.admin-product-modal {
+    width: min(1040px, calc(100% - 32px));
+    max-height: min(78vh, 820px);
+    margin: auto;
+    overflow: hidden;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    color: var(--text);
+    background: rgba(18, 22, 26, 0.96);
+    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+}
+
+.admin-product-modal::backdrop {
+    background: rgba(7, 10, 14, 0.72);
+    backdrop-filter: blur(8px);
+}
+
+.admin-product-modal-box {
+    max-height: min(78vh, 820px);
+    overflow: auto;
+    padding: 30px;
+}
+
+.admin-product-editor,
+.admin-product-modal {
+    overflow: hidden;
+}
+
+.admin-product-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.admin-field-wide {
+    grid-column: 1 / -1;
+}
+
+.admin-language-fields {
+    display: grid;
+    gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: rgba(13, 17, 22, 0.22);
+}
+
+.admin-language-fields h3 {
+    font-size: 18px;
+}
+
+.field textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--text);
+    background: rgba(13, 17, 22, 0.58);
+    font: 600 16px var(--font-body);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.field textarea:focus {
+    border-color: rgba(55, 217, 255, 0.68);
+    box-shadow: 0 0 0 4px rgba(55, 217, 255, 0.12);
+}
+
+.admin-hero-actions,
+.admin-product-toggles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.admin-featured-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: rgba(13, 17, 22, 0.34);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.admin-featured-toggle input {
+    position: relative;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: rgba(13, 17, 22, 0.58);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.admin-featured-toggle input:checked {
+    border-color: rgba(55, 217, 255, 0.68);
+    background: rgba(13, 17, 22, 0.82);
+}
+
+.admin-featured-toggle input:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid var(--cyan);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.admin-sticky-actions {
+    position: sticky;
+    bottom: 16px;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(18, 22, 26, 0.86);
+    backdrop-filter: blur(18px);
 }
 
 .button-danger {
@@ -1872,6 +2107,10 @@ input[type="checkbox"] {
 
 .tariff-card {
     min-height: 380px;
+}
+
+.esim-card {
+    min-height: auto;
 }
 
 .tariff-details {

@@ -165,11 +165,14 @@
         grid-template-columns: repeat(2, 1fr);
     }
 
-    .admin-user-card {
+    .admin-user-card,
+    .admin-product-row {
         grid-template-columns: 1fr;
     }
 
-    .admin-search {
+    .admin-search,
+    .admin-products-editor,
+    .admin-product-fields {
         grid-template-columns: 1fr;
     }
 }
@@ -376,7 +379,18 @@
     }
 
     .admin-panel,
+    .admin-product-category,
     .admin-user-card {
+        padding: 22px;
+    }
+
+    .admin-sticky-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-product-modal-box {
+        max-height: min(82vh, 760px);
         padding: 22px;
     }
 

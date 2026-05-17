@@ -28,6 +28,168 @@ public class AdminController : Controller
         return View(model);
     }
 
+    public async Task<IActionResult> Products()
+    {
+        var counts = await _dbContext.Products
+            .AsNoTracking()
+            .GroupBy(product => product.Category)
+            .Select(group => new { Category = group.Key, Count = group.Count() })
+            .ToListAsync();
+
+        return View(new AdminProductCategoryListViewModel
+        {
+            Categories = ProductCatalog.Categories
+                .Select(category => new AdminProductCategoryViewModel
+                {
+                    Key = category.Key,
+                    Title = category.Title,
+                    Description = category.Description,
+                    Count = counts.FirstOrDefault(item => item.Category == category.Key)?.Count ?? 0
+                })
+                .ToList()
+        });
+    }
+
+    public async Task<IActionResult> ProductCategory(string id)
+    {
+        var metadata = ProductCatalog.Find(id);
+
+        if (metadata is null)
+        {
+            return RedirectToAction(nameof(Products));
+        }
+
+        return View(BuildProductEditor(metadata, await GetAdminProducts(metadata.Key)));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ProductCategory(AdminProductEditorViewModel model, string? saveProducts)
+    {
+        var metadata = ProductCatalog.Find(model.Category);
+
+        if (metadata is null)
+        {
+            return RedirectToAction(nameof(Products));
+        }
+
+        if (!string.Equals(saveProducts, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
+        }
+
+        var ids = model.Products.Select(product => product.Id).ToList();
+        var products = await _dbContext.Products
+            .Where(product => product.Category == metadata.Key && ids.Contains(product.Id))
+            .ToListAsync();
+
+        foreach (var editedProduct in model.Products)
+        {
+            var product = products.FirstOrDefault(item => item.Id == editedProduct.Id);
+
+            if (product is null)
+            {
+                continue;
+            }
+
+            product.Name = (editedProduct.Name ?? string.Empty).Trim();
+            product.NameRu = (editedProduct.NameRu ?? string.Empty).Trim();
+            product.NameAz = (editedProduct.NameAz ?? string.Empty).Trim();
+            product.Price = (editedProduct.Price ?? string.Empty).Trim();
+            product.PriceRu = (editedProduct.PriceRu ?? string.Empty).Trim();
+            product.PriceAz = (editedProduct.PriceAz ?? string.Empty).Trim();
+            product.Period = (editedProduct.Period ?? string.Empty).Trim();
+            product.PeriodRu = (editedProduct.PeriodRu ?? string.Empty).Trim();
+            product.PeriodAz = (editedProduct.PeriodAz ?? string.Empty).Trim();
+            product.Description = (editedProduct.Description ?? string.Empty).Trim();
+            product.DescriptionRu = (editedProduct.DescriptionRu ?? string.Empty).Trim();
+            product.DescriptionAz = (editedProduct.DescriptionAz ?? string.Empty).Trim();
+            product.Features = NormalizeLines(editedProduct.Features);
+            product.FeaturesRu = NormalizeLines(editedProduct.FeaturesRu);
+            product.FeaturesAz = NormalizeLines(editedProduct.FeaturesAz);
+            product.ButtonText = (editedProduct.ButtonText ?? string.Empty).Trim();
+            product.ButtonTextRu = (editedProduct.ButtonTextRu ?? string.Empty).Trim();
+            product.ButtonTextAz = (editedProduct.ButtonTextAz ?? string.Empty).Trim();
+            product.ButtonUrl = (editedProduct.ButtonUrl ?? string.Empty).Trim();
+            product.IsFeatured = editedProduct.IsFeatured;
+            product.IsFavorite = editedProduct.IsFavorite;
+            product.SortOrder = editedProduct.SortOrder;
+        }
+
+        await _dbContext.SaveChangesAsync();
+        TempData["AdminMessage"] = "Products updated.";
+
+        return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddProduct(string category)
+    {
+        var metadata = ProductCatalog.Find(category);
+
+        if (metadata is null)
+        {
+            return RedirectToAction(nameof(Products));
+        }
+
+        var nextSortOrder = await _dbContext.Products
+            .Where(product => product.Category == metadata.Key)
+            .Select(product => (int?)product.SortOrder)
+            .MaxAsync() ?? 0;
+
+        _dbContext.Products.Add(new Product
+        {
+            Category = metadata.Key,
+            Name = "New product",
+            NameRu = "New product",
+            NameAz = "New product",
+            Price = "0.00",
+            PriceRu = "0.00",
+            PriceAz = "0.00",
+            Period = string.Empty,
+            Description = string.Empty,
+            DescriptionRu = string.Empty,
+            DescriptionAz = string.Empty,
+            Features = "Feature",
+            FeaturesRu = "Feature",
+            FeaturesAz = "Feature",
+            ButtonText = "Choose",
+            ButtonTextRu = "Choose",
+            ButtonTextAz = "Choose",
+            ButtonUrl = "#",
+            SortOrder = nextSortOrder + 10
+        });
+
+        await _dbContext.SaveChangesAsync();
+        TempData["AdminMessage"] = "Product added.";
+
+        return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteProduct(int id, string category)
+    {
+        var metadata = ProductCatalog.Find(category);
+
+        if (metadata is null)
+        {
+            return RedirectToAction(nameof(Products));
+        }
+
+        var product = await _dbContext.Products.FirstOrDefaultAsync(item => item.Id == id && item.Category == metadata.Key);
+
+        if (product is not null)
+        {
+            _dbContext.Products.Remove(product);
+            await _dbContext.SaveChangesAsync();
+            TempData["AdminMessage"] = "Product deleted.";
+        }
+
+        return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleBlock(int id, string? search)
@@ -128,6 +290,59 @@ public class AdminController : Controller
         var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         return int.TryParse(id, out var userId) ? await _dbContext.Users.FindAsync(userId) : null;
+    }
+
+    private async Task<List<AdminProductItemViewModel>> GetAdminProducts(string category)
+    {
+        return await _dbContext.Products
+            .AsNoTracking()
+            .Where(product => product.Category == category)
+            .OrderBy(product => product.SortOrder)
+            .ThenBy(product => product.Id)
+            .Select(product => new AdminProductItemViewModel
+            {
+                Id = product.Id,
+                Name = product.Name,
+                NameRu = product.NameRu,
+                NameAz = product.NameAz,
+                Price = product.Price,
+                PriceRu = product.PriceRu,
+                PriceAz = product.PriceAz,
+                Period = product.Period,
+                PeriodRu = product.PeriodRu,
+                PeriodAz = product.PeriodAz,
+                Description = product.Description,
+                DescriptionRu = product.DescriptionRu,
+                DescriptionAz = product.DescriptionAz,
+                Features = product.Features,
+                FeaturesRu = product.FeaturesRu,
+                FeaturesAz = product.FeaturesAz,
+                ButtonText = product.ButtonText,
+                ButtonTextRu = product.ButtonTextRu,
+                ButtonTextAz = product.ButtonTextAz,
+                ButtonUrl = product.ButtonUrl,
+                IsFeatured = product.IsFeatured,
+                IsFavorite = product.IsFavorite,
+                SortOrder = product.SortOrder
+            })
+            .ToListAsync();
+    }
+
+    private static AdminProductEditorViewModel BuildProductEditor(ProductCategoryMetadata metadata, List<AdminProductItemViewModel> products)
+    {
+        return new AdminProductEditorViewModel
+        {
+            Category = metadata.Key,
+            Title = metadata.Title,
+            Description = metadata.Description,
+            Products = products
+        };
+    }
+
+    private static string NormalizeLines(string? value)
+    {
+        return string.Join('\n', (value ?? string.Empty)
+            .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
     }
 
 }

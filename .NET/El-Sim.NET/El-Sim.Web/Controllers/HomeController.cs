@@ -19,29 +19,32 @@ namespace El_Sim.Web.Controllers
             _environment = environment;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            return View(new HomeProductsViewModel
+            {
+                EsimProducts = await GetProducts("esim")
+            });
         }
 
-        public IActionResult Plans()
+        public async Task<IActionResult> Plans()
         {
-            return View();
+            return View(BuildCategoryPage("tariffs", await GetProducts("tariffs")));
         }
 
-        public IActionResult Pass()
+        public async Task<IActionResult> Pass()
         {
-            return View();
+            return View(BuildCategoryPage("pass", await GetProducts("pass")));
         }
 
-        public IActionResult Global()
+        public async Task<IActionResult> Global()
         {
-            return View();
+            return View(BuildCategoryPage("global", await GetProducts("global")));
         }
 
-        public IActionResult Wifi()
+        public async Task<IActionResult> Wifi()
         {
-            return View();
+            return View(BuildCategoryPage("wifi", await GetProducts("wifi")));
         }
 
         public IActionResult Login()
@@ -420,6 +423,69 @@ namespace El_Sim.Web.Controllers
             var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             return int.TryParse(id, out var userId) ? await _dbContext.Users.FindAsync(userId) : null;
+        }
+
+        private async Task<List<ProductCardViewModel>> GetProducts(string category)
+        {
+            var products = await _dbContext.Products
+                .AsNoTracking()
+                .Where(product => product.Category == category)
+                .OrderBy(product => product.SortOrder)
+                .ThenBy(product => product.Id)
+                .ToListAsync();
+
+            return products.Select(ToProductCard).ToList();
+        }
+
+        private static ProductCategoryPageViewModel BuildCategoryPage(string category, List<ProductCardViewModel> products)
+        {
+            var metadata = ProductCatalog.Find(category)!;
+
+            return new ProductCategoryPageViewModel
+            {
+                Category = metadata.Key,
+                Title = metadata.Title,
+                Eyebrow = metadata.Eyebrow,
+                Description = metadata.PageDescription,
+                Products = products
+            };
+        }
+
+        private static ProductCardViewModel ToProductCard(Product product)
+        {
+            return new ProductCardViewModel
+            {
+                Id = product.Id,
+                Category = product.Category,
+                Name = product.Name,
+                NameRu = product.NameRu,
+                NameAz = product.NameAz,
+                Price = product.Price,
+                PriceRu = product.PriceRu,
+                PriceAz = product.PriceAz,
+                Period = product.Period,
+                PeriodRu = product.PeriodRu,
+                PeriodAz = product.PeriodAz,
+                Description = product.Description,
+                DescriptionRu = product.DescriptionRu,
+                DescriptionAz = product.DescriptionAz,
+                ButtonText = product.ButtonText,
+                ButtonTextRu = product.ButtonTextRu,
+                ButtonTextAz = product.ButtonTextAz,
+                ButtonUrl = product.ButtonUrl,
+                IsFeatured = product.IsFeatured,
+                IsFavorite = product.IsFavorite,
+                SortOrder = product.SortOrder,
+                Features = product.Features
+                    .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList(),
+                FeaturesRu = product.FeaturesRu
+                    .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList(),
+                FeaturesAz = product.FeaturesAz
+                    .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .ToList()
+            };
         }
 
         private async Task SendTwoFactorCode(AppUser user, bool rememberMe)

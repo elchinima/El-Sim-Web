@@ -1,0 +1,28 @@
+@model AdminProductCategoryListViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Products - El-Sim Admin";
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-products-title">
+    <div>
+      <p class="eyebrow">catalog</p>
+      <h1 id="admin-products-title">Products</h1>
+      <p>Choose a product category and edit the cards shown on the public pages.</p>
+    </div>
+    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+  </section>
+
+  <section class="admin-product-categories" aria-label="Product categories">
+    @foreach (var category in Model.Categories)
+    {
+      <a class="admin-product-category" asp-action="ProductCategory" asp-route-id="@category.Key">
+        <span>@category.Title</span>
+        <p>@category.Description</p>
+        <strong>@category.Count products</strong>
+      </a>
+    }
+  </section>
+</main>

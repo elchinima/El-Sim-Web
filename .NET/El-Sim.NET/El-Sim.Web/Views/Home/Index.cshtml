@@ -1,4 +1,6 @@
-﻿@{
+﻿@model HomeProductsViewModel
+
+@{
     ViewData["Title"] = "El-Sim - eSIM Operator";
 }
 
@@ -125,24 +127,44 @@
       </div>
 
       <div class="plans-grid">
-        <article class="plan-card">
-          <h3>Start</h3>
-          <div class="price"><span>3</span> AZN</div>
-          <p>5 GB of mobile data</p>
-          <a class="plan-link" href="#">Choose</a>
-        </article>
-        <article class="plan-card is-featured">
-          <h3>Smart</h3>
-          <div class="price"><span>5</span> AZN</div>
-          <p>10 GB, calls and SMS</p>
-          <a class="plan-link" href="#">Choose</a>
-        </article>
-        <article class="plan-card">
-          <h3>Max</h3>
-          <div class="price"><span>9</span> AZN</div>
-          <p>Unlimited mobile data</p>
-          <a class="plan-link" href="#">Choose</a>
-        </article>
+        @foreach (var product in Model.EsimProducts)
+        {
+          <article class="pass-card esim-card @(product.IsFeatured ? "is-featured" : "")">
+            @if (product.IsFavorite)
+            {
+              <span class="favorite-badge">Favorite</span>
+            }
+            <div>
+              <h2 data-product-i18n data-lang-en="@product.Name" data-lang-ru="@(string.IsNullOrWhiteSpace(product.NameRu) ? product.Name : product.NameRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.NameAz) ? product.Name : product.NameAz)">@product.Name</h2>
+              @if (!string.IsNullOrWhiteSpace(product.Price) || !string.IsNullOrWhiteSpace(product.Period))
+              {
+                <p class="pass-price">@if (!string.IsNullOrWhiteSpace(product.Price)) { <span data-product-i18n data-lang-en="@product.Price" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PriceRu) ? product.Price : product.PriceRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PriceAz) ? product.Price : product.PriceAz)">@product.Price</span> } @if (!string.IsNullOrWhiteSpace(product.Price) && !string.IsNullOrWhiteSpace(product.Period)) { <span>| </span> } @if (!string.IsNullOrWhiteSpace(product.Period)) { <span data-product-i18n data-lang-en="@product.Period" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PeriodRu) ? product.Period : product.PeriodRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PeriodAz) ? product.Period : product.PeriodAz)">@product.Period</span> }</p>
+              }
+            </div>
+            @if (product.Features.Count > 0)
+            {
+              <ul>
+                @for (var featureIndex = 0; featureIndex < product.Features.Count; featureIndex++)
+                {
+                  var feature = product.Features[featureIndex];
+                  var featureRu = product.FeaturesRu.Count > featureIndex ? product.FeaturesRu[featureIndex] : feature;
+                  var featureAz = product.FeaturesAz.Count > featureIndex ? product.FeaturesAz[featureIndex] : feature;
+                  <li data-product-i18n data-lang-en="@feature" data-lang-ru="@featureRu" data-lang-az="@featureAz">@feature</li>
+                }
+              </ul>
+            }
+            else if (!string.IsNullOrWhiteSpace(product.Description))
+            {
+              <ul>
+                <li data-product-i18n data-lang-en="@product.Description" data-lang-ru="@(string.IsNullOrWhiteSpace(product.DescriptionRu) ? product.Description : product.DescriptionRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.DescriptionAz) ? product.Description : product.DescriptionAz)">@product.Description</li>
+              </ul>
+            }
+            @if (!string.IsNullOrWhiteSpace(product.ButtonText))
+            {
+              <a class="plan-link" href="@(string.IsNullOrWhiteSpace(product.ButtonUrl) ? "#" : product.ButtonUrl)" data-product-i18n data-lang-en="@product.ButtonText" data-lang-ru="@(string.IsNullOrWhiteSpace(product.ButtonTextRu) ? product.ButtonText : product.ButtonTextRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.ButtonTextAz) ? product.ButtonText : product.ButtonTextAz)">@product.ButtonText</a>
+            }
+          </article>
+        }
       </div>
     </section>
 
