@@ -23,7 +23,9 @@ namespace El_Sim.Web.Controllers
         {
             return View(new HomeProductsViewModel
             {
-                EsimProducts = await GetProducts("esim")
+                EsimProducts = await GetProducts("esim"),
+                DesktopSliders = await GetSliders(false),
+                MobileSliders = await GetSliders(true)
             });
         }
 
@@ -435,6 +437,26 @@ namespace El_Sim.Web.Controllers
                 .ToListAsync();
 
             return products.Select(ToProductCard).ToList();
+        }
+
+        private async Task<List<HomeSliderViewModel>> GetSliders(bool isMobile)
+        {
+            return await _dbContext.HomeSliders
+                .AsNoTracking()
+                .Where(slider => slider.IsMobile == isMobile)
+                .OrderBy(slider => slider.Language == "en" ? 0 : slider.Language == "ru" ? 1 : 2)
+                .ThenBy(slider => slider.SortOrder)
+                .ThenBy(slider => slider.Id)
+                .Select(slider => new HomeSliderViewModel
+                {
+                    Id = slider.Id,
+                    ImagePath = slider.ImagePath,
+                    AltText = slider.AltText,
+                    Language = slider.Language,
+                    IsMobile = slider.IsMobile,
+                    SortOrder = slider.SortOrder
+                })
+                .ToListAsync();
         }
 
         private static ProductCategoryPageViewModel BuildCategoryPage(string category, List<ProductCardViewModel> products)

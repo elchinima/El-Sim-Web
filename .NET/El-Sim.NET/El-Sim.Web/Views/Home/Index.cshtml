@@ -2,43 +2,63 @@
 
 @{
     ViewData["Title"] = "El-Sim - eSIM Operator";
+    var sliderLanguages = new[] { "en", "ru", "az" };
 }
 
-<main>
-    <section class="top-slider" aria-label="El-Sim highlights" data-active="0">
-      <div class="slider-track">
-        <article class="slider-slide">
-          <img src="/Assets/Image/Slider/Slider_1.png" alt="Digital eSIM card" draggable="false">
-          <div class="slider-content">
-            <span>El-Sim eSIM</span>
-            <h2>Instant mobile access</h2>
-            <p>Activate your digital SIM with a QR code and stay connected without plastic cards.</p>
-          </div>
-        </article>
-        <article class="slider-slide">
-          <img src="/Assets/Image/Slider/Slider_2.png" alt="Smartphone with eSIM activation" draggable="false">
-          <div class="slider-content">
-            <span>Fast setup</span>
-            <h2>Scan, install, go online</h2>
-            <p>A smooth activation flow built for modern phones and everyday travel.</p>
-          </div>
-        </article>
-        <article class="slider-slide">
-          <img src="/Assets/Image/Slider/Slider_3.png" alt="Azerbaijan network coverage" draggable="false">
-          <div class="slider-content">
-            <span>Coverage</span>
-            <h2>Made for Azerbaijan</h2>
-            <p>Reliable digital connectivity across the city, regions, and the road between them.</p>
-          </div>
-        </article>
-      </div>
+<main class="home-page">
+    @foreach (var language in sliderLanguages)
+    {
+      var desktopSliders = Model.DesktopSliders.Where(slider => slider.Language == language).ToList();
+      var mobileSliders = Model.MobileSliders.Where(slider => slider.Language == language).ToList();
 
-      <div class="slider-dots" aria-hidden="true">
-        <span class="is-active"></span>
-        <span></span>
-        <span></span>
-      </div>
-    </section>
+      @if (desktopSliders.Count > 0)
+      {
+        <section class="top-slider top-slider-desktop" aria-label="El-Sim desktop highlights" data-active="0" data-lang-slider="@language" data-slider-device="desktop" @(language == "en" ? "" : "hidden")>
+          <div class="slider-track">
+            @foreach (var slider in desktopSliders)
+            {
+              <article class="slider-slide">
+                <img src="@slider.ImagePath" alt="@slider.AltText" draggable="false">
+              </article>
+            }
+          </div>
+
+          @if (desktopSliders.Count > 1)
+          {
+            <div class="slider-dots" aria-hidden="true">
+              @for (var index = 0; index < desktopSliders.Count; index++)
+              {
+                <span class="@(index == 0 ? "is-active" : "")"></span>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (mobileSliders.Count > 0)
+      {
+        <section class="top-slider top-slider-mobile" aria-label="El-Sim mobile highlights" data-active="0" data-lang-slider="@language" data-slider-device="mobile" @(language == "en" && desktopSliders.Count == 0 ? "" : "hidden")>
+          <div class="slider-track">
+            @foreach (var slider in mobileSliders)
+            {
+              <article class="slider-slide">
+                <img src="@slider.ImagePath" alt="@slider.AltText" draggable="false">
+              </article>
+            }
+          </div>
+
+          @if (mobileSliders.Count > 1)
+          {
+            <div class="slider-dots" aria-hidden="true">
+              @for (var index = 0; index < mobileSliders.Count; index++)
+              {
+                <span class="@(index == 0 ? "is-active" : "")"></span>
+              }
+            </div>
+          }
+        </section>
+      }
+    }
 
     <section class="hero">
       <div class="hero-copy">

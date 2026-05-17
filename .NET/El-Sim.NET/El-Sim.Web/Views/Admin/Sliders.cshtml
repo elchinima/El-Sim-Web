@@ -1,0 +1,219 @@
+@model AdminSliderListViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Sliders - El-Sim Admin";
+    var sliderLanguages = new[] { "en", "ru", "az" };
+    var sliderLanguageNames = new Dictionary<string, string>
+    {
+        ["en"] = "English",
+        ["ru"] = "Russian",
+        ["az"] = "Azerbaijani"
+    };
+    var canUploadAny = sliderLanguages.Any(language =>
+        Model.DesktopSliders.Count(slider => slider.Language == language) < 6 ||
+        Model.MobileSliders.Count(slider => slider.Language == language) < 6);
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-sliders-title">
+    <div>
+      <p class="eyebrow">home carousel</p>
+      <h1 id="admin-sliders-title">Sliders</h1>
+      <p>Upload desktop and mobile carousel images for the home page.</p>
+    </div>
+    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+  </section>
+
+  @if (TempData["AdminMessage"] is string adminMessage)
+  {
+    <div class="admin-message">@adminMessage</div>
+  }
+
+  @if (TempData["AdminError"] is string adminError)
+  {
+    <div class="admin-message is-error">@adminError</div>
+  }
+
+  <section class="admin-panel admin-slider-upload-panel" aria-label="Upload slider">
+    <div class="admin-panel-head">
+      <div>
+        <p class="eyebrow">upload</p>
+        <h2>Add slider</h2>
+      </div>
+      <span>png, jpg, gif up to 3 MB, max 6 each</span>
+    </div>
+
+    <form method="post" asp-action="AddSlider" enctype="multipart/form-data" class="admin-slider-upload-form">
+      @Html.AntiForgeryToken()
+      <div class="field admin-slider-file-field">
+        <span class="field-label">Image</span>
+        <label class="file-drop-zone" for="sliderImage">
+          <input id="sliderImage" name="sliderImage" type="file" accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif" data-max-file-size="3145728" data-max-file-size-text="3 MB" @(canUploadAny ? "" : "disabled")>
+          <span class="file-drop-preview"></span>
+          <span class="file-drop-title">Drop slider here</span>
+          <span class="file-drop-text">or choose PNG, JPG, GIF up to 3 MB</span>
+        </label>
+      </div>
+      <div class="field">
+        <label for="language">Language</label>
+        <select id="language" name="language">
+          <option value="all">All languages</option>
+          <option value="en">English</option>
+          <option value="ru">Russian</option>
+          <option value="az">Azerbaijani</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="altText">Alt text</label>
+        <input id="altText" name="altText" maxlength="160">
+      </div>
+      <label class="admin-featured-toggle admin-slider-type-toggle">
+        <input name="isMobile" type="checkbox" value="true">
+        <span>Mobile 3:4</span>
+      </label>
+      <button class="button button-secondary" type="button" data-clear-file>Clear field</button>
+      <button class="button button-primary" type="submit" @(canUploadAny ? "" : "disabled")>Upload</button>
+    </form>
+  </section>
+
+  <form method="post" asp-action="UpdateSliders" class="admin-product-form" data-confirm-message="Save slider changes?" data-confirm-button="Save">
+    @Html.AntiForgeryToken()
+
+    @foreach (var language in sliderLanguages)
+    {
+      var desktopCount = Model.DesktopSliders.Count(slider => slider.Language == language);
+      var mobileCount = Model.MobileSliders.Count(slider => slider.Language == language);
+
+      <section class="admin-panel admin-slider-panel" aria-label="@sliderLanguageNames[language] desktop sliders">
+        <div class="admin-panel-head">
+          <div>
+            <p class="eyebrow">@sliderLanguageNames[language]</p>
+            <h2>Desktop 16:9</h2>
+          </div>
+          <span>@desktopCount / 6 sliders</span>
+        </div>
+
+        <div class="admin-slider-list">
+          @if (desktopCount == 0)
+          {
+            <p class="admin-empty">No desktop sliders.</p>
+          }
+
+          @for (var index = 0; index < Model.DesktopSliders.Count; index++)
+          {
+            if (Model.DesktopSliders[index].Language != language)
+            {
+              continue;
+            }
+
+            <article class="admin-slider-row">
+              <input type="hidden" asp-for="DesktopSliders[index].Id">
+              <img src="@Model.DesktopSliders[index].ImagePath" alt="@Model.DesktopSliders[index].AltText">
+              <div class="admin-slider-fields">
+                <div class="field">
+                  <label asp-for="DesktopSliders[index].AltText">Alt text</label>
+                  <input asp-for="DesktopSliders[index].AltText" maxlength="160">
+                </div>
+                <div class="field">
+                  <label asp-for="DesktopSliders[index].SortOrder">Sort order</label>
+                  <input asp-for="DesktopSliders[index].SortOrder" type="number">
+                </div>
+              </div>
+              <div class="admin-slider-row-actions">
+                <button class="button button-secondary" type="button" data-product-modal-open="update-slider-@Model.DesktopSliders[index].Id">Update</button>
+                <button class="button button-danger" type="submit" form="delete-slider-@Model.DesktopSliders[index].Id">Delete</button>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+
+      <section class="admin-panel admin-slider-panel" aria-label="@sliderLanguageNames[language] mobile sliders">
+        <div class="admin-panel-head">
+          <div>
+            <p class="eyebrow">@sliderLanguageNames[language]</p>
+            <h2>Mobile 3:4</h2>
+          </div>
+          <span>@mobileCount / 6 sliders</span>
+        </div>
+
+        <div class="admin-slider-list">
+          @if (mobileCount == 0)
+          {
+            <p class="admin-empty">No mobile sliders.</p>
+          }
+
+          @for (var index = 0; index < Model.MobileSliders.Count; index++)
+          {
+            if (Model.MobileSliders[index].Language != language)
+            {
+              continue;
+            }
+
+            <article class="admin-slider-row is-mobile">
+              <input type="hidden" asp-for="MobileSliders[index].Id">
+              <img src="@Model.MobileSliders[index].ImagePath" alt="@Model.MobileSliders[index].AltText">
+              <div class="admin-slider-fields">
+                <div class="field">
+                  <label asp-for="MobileSliders[index].AltText">Alt text</label>
+                  <input asp-for="MobileSliders[index].AltText" maxlength="160">
+                </div>
+                <div class="field">
+                  <label asp-for="MobileSliders[index].SortOrder">Sort order</label>
+                  <input asp-for="MobileSliders[index].SortOrder" type="number">
+                </div>
+              </div>
+              <div class="admin-slider-row-actions">
+                <button class="button button-secondary" type="button" data-product-modal-open="update-slider-@Model.MobileSliders[index].Id">Update</button>
+                <button class="button button-danger" type="submit" form="delete-slider-@Model.MobileSliders[index].Id">Delete</button>
+              </div>
+            </article>
+          }
+        </div>
+      </section>
+    }
+
+    <div class="admin-sticky-actions">
+      <button class="button button-primary" type="submit">Save sliders</button>
+    </div>
+  </form>
+
+  @foreach (var slider in Model.DesktopSliders.Concat(Model.MobileSliders))
+  {
+    <form id="delete-slider-@slider.Id" method="post" asp-action="DeleteSlider" asp-route-id="@slider.Id" data-confirm-message="Delete this slider?" data-confirm-button="Delete">
+      @Html.AntiForgeryToken()
+    </form>
+
+    <dialog class="admin-product-modal admin-slider-modal" id="update-slider-@slider.Id">
+      <form method="post" asp-action="UpdateSliderImage" asp-route-id="@slider.Id" enctype="multipart/form-data" class="admin-product-modal-box" data-confirm-message="Update this slider image?" data-confirm-button="Update">
+        @Html.AntiForgeryToken()
+        <div class="admin-panel-head">
+          <div>
+            <p class="eyebrow">@slider.Language.ToUpperInvariant() @(slider.IsMobile ? "mobile" : "desktop")</p>
+            <h2>Update slider</h2>
+          </div>
+          <button class="button button-secondary" type="button" data-product-modal-close>Close</button>
+        </div>
+
+        <div class="admin-slider-update-grid">
+          <img src="@slider.ImagePath" alt="@slider.AltText">
+          <div class="field admin-slider-file-field">
+            <span class="field-label">New image</span>
+            <label class="file-drop-zone" for="sliderImage-@slider.Id">
+              <input id="sliderImage-@slider.Id" name="sliderImage" type="file" accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif" data-max-file-size="3145728" data-max-file-size-text="3 MB">
+              <span class="file-drop-preview"></span>
+              <span class="file-drop-title">Drop slider here</span>
+              <span class="file-drop-text">or choose PNG, JPG, GIF up to 3 MB</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="admin-slider-modal-actions">
+          <button class="button button-secondary" type="button" data-clear-file>Clear field</button>
+          <button class="button button-primary" type="submit">Update</button>
+        </div>
+      </form>
+    </dialog>
+  }
+</main>

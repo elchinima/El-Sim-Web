@@ -31,6 +31,18 @@ public class ProductCardViewModel
 public class HomeProductsViewModel
 {
     public List<ProductCardViewModel> EsimProducts { get; set; } = [];
+    public List<HomeSliderViewModel> DesktopSliders { get; set; } = [];
+    public List<HomeSliderViewModel> MobileSliders { get; set; } = [];
+}
+
+public class HomeSliderViewModel
+{
+    public int Id { get; set; }
+    public string ImagePath { get; set; } = string.Empty;
+    public string AltText { get; set; } = string.Empty;
+    public string Language { get; set; } = "en";
+    public bool IsMobile { get; set; }
+    public int SortOrder { get; set; }
 }
 
 public class ProductCategoryPageViewModel
@@ -88,4 +100,16 @@ public class AdminProductItemViewModel
     public bool IsFeatured { get; set; }
     public bool IsFavorite { get; set; }
     public int SortOrder { get; set; }
+}
+
+public class AdminSliderListViewModel
+{
+    public List<HomeSliderViewModel> DesktopSliders { get; set; } = [];
+    public List<HomeSliderViewModel> MobileSliders { get; set; } = [];
+}
+
+public class AdminSliderUpdateViewModel
+{
+    public List<HomeSliderViewModel> DesktopSliders { get; set; } = [];
+    public List<HomeSliderViewModel> MobileSliders { get; set; } = [];
 }

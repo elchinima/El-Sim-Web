@@ -149,7 +149,8 @@ document.querySelectorAll(".file-drop-zone").forEach((dropZone) => {
     const defaultTitle = title?.textContent || "";
     const defaultText = text?.textContent || "";
     const defaultPreview = preview?.style.backgroundImage || "";
-    const maxFileSize = 2 * 1024 * 1024;
+    const maxFileSize = Number(input.dataset.maxFileSize || 2 * 1024 * 1024);
+    const maxFileSizeText = input.dataset.maxFileSizeText || "2 MB";
     let previewUrl = "";
 
     if (!input) {
@@ -160,7 +161,7 @@ document.querySelectorAll(".file-drop-zone").forEach((dropZone) => {
         if (input.files?.length && input.files[0].size > maxFileSize) {
             clearFile();
             if (title) {
-                title.textContent = "File is larger than 2 MB";
+                title.textContent = `File is larger than ${maxFileSizeText}`;
             }
             return;
         }

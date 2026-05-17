@@ -46,6 +46,30 @@ public class ProductDataInitializer
             """);
 
         await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF OBJECT_ID(N'[HomeSliders]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [HomeSliders] (
+                    [Id] int IDENTITY(1,1) NOT NULL CONSTRAINT [PK_HomeSliders] PRIMARY KEY,
+                    [ImagePath] nvarchar(260) NOT NULL,
+                    [AltText] nvarchar(160) NOT NULL CONSTRAINT [DF_HomeSliders_AltText] DEFAULT N'',
+                    [Language] nvarchar(2) NOT NULL CONSTRAINT [DF_HomeSliders_Language] DEFAULT N'en',
+                    [IsMobile] bit NOT NULL CONSTRAINT [DF_HomeSliders_IsMobile] DEFAULT CAST(0 AS bit),
+                    [SortOrder] int NOT NULL,
+                    [CreatedAtUtc] datetime2 NOT NULL
+                );
+
+                CREATE INDEX [IX_HomeSliders_Language_IsMobile_SortOrder] ON [HomeSliders] ([Language], [IsMobile], [SortOrder]);
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF COL_LENGTH(N'[HomeSliders]', N'Language') IS NULL
+            BEGIN
+                ALTER TABLE [HomeSliders] ADD [Language] nvarchar(2) NOT NULL CONSTRAINT [DF_HomeSliders_Language] DEFAULT N'en';
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
             IF COL_LENGTH(N'[Products]', N'IsFavorite') IS NULL
             BEGIN
                 ALTER TABLE [Products] ADD [IsFavorite] bit NOT NULL CONSTRAINT [DF_Products_IsFavorite] DEFAULT CAST(0 AS bit);

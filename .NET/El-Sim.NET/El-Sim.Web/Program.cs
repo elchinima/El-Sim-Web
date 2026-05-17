@@ -13,6 +13,7 @@ builder.Services.Configure<EmailOptions>(options =>
 });
 builder.Services.AddScoped<EmailSender>();
 builder.Services.AddScoped<ProfileImageProcessor>();
+builder.Services.AddScoped<SliderImageProcessor>();
 builder.Services.AddScoped<ProductDataInitializer>();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

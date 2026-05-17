@@ -25,6 +25,10 @@
 }
 
 @media (max-width: 860px) {
+    .top-slider-desktop {
+        display: none !important;
+    }
+
     .site-header {
         top: 10px;
         gap: 10px;
@@ -172,8 +176,22 @@
 
     .admin-search,
     .admin-products-editor,
-    .admin-product-fields {
+    .admin-product-fields,
+    .admin-slider-upload-form,
+    .admin-slider-row,
+    .admin-slider-fields,
+    .admin-slider-update-grid {
         grid-template-columns: 1fr;
+    }
+
+    .admin-slider-row.is-mobile img {
+        max-width: 220px;
+    }
+}
+
+@media (min-width: 861px) {
+    .top-slider-mobile {
+        display: none !important;
     }
 }
 
@@ -261,9 +279,9 @@
     }
 
     .top-slider {
+        width: min(100% - 24px, 327px);
         margin-top: 24px;
         border-radius: 22px;
-        aspect-ratio: 3 / 4;
     }
 
     .top-slider::after {

@@ -334,8 +334,33 @@ const getTranslation = (text, language) => {
     return translated;
 };
 
+const updateLanguageSliders = (language) => {
+    const currentLanguage = translations[language] || language === "en" ? language : "en";
+    const sliders = [...document.querySelectorAll("[data-lang-slider]")];
+
+    if (sliders.length === 0) {
+        return;
+    }
+
+    const languageSliders = sliders.filter((slider) => slider.dataset.langSlider === currentLanguage);
+    const desktopSlider = languageSliders.find((slider) => slider.dataset.sliderDevice === "desktop");
+    const mobileSlider = languageSliders.find((slider) => slider.dataset.sliderDevice === "mobile");
+    const isMobileViewport = window.matchMedia("(max-width: 860px)").matches;
+    const activeSlider = isMobileViewport ? mobileSlider : desktopSlider;
+
+    sliders.forEach((slider) => {
+        slider.hidden = slider !== activeSlider;
+    });
+
+    window.dispatchEvent(new CustomEvent("elsim:slider-visibility"));
+};
+
+window.updateLanguageSliders = updateLanguageSliders;
+
 const applyLanguage = (language) => {
     const currentLanguage = translations[language] || language === "en" ? language : "en";
+
+    updateLanguageSliders(currentLanguage);
 
     document.querySelectorAll("[data-product-i18n]").forEach((element) => {
         const fallback = element.dataset.langEn || element.textContent.trim();
@@ -372,6 +397,10 @@ const applyLanguage = (language) => {
         button.classList.toggle("is-active", button.dataset.langButton === currentLanguage);
     });
 };
+
+window.addEventListener("resize", () => {
+    updateLanguageSliders(localStorage.getItem(languageStorageKey) || "en");
+});
 
 const savedLanguage = localStorage.getItem(languageStorageKey) || "en";
 

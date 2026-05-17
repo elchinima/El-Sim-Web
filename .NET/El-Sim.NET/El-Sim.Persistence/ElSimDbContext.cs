@@ -9,6 +9,7 @@ public class ElSimDbContext : DbContext
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<TwoFactorCode> TwoFactorCodes => Set<TwoFactorCode>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<HomeSlider> HomeSliders => Set<HomeSlider>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,6 +76,20 @@ public class ElSimDbContext : DbContext
             entity.Property(product => product.IsFavorite).HasDefaultValue(false);
             entity.Property(product => product.SortOrder).IsRequired();
             entity.HasIndex(product => new { product.Category, product.SortOrder });
+        });
+
+        modelBuilder.Entity<HomeSlider>(entity =>
+        {
+            entity.ToTable("HomeSliders");
+            entity.HasKey(slider => slider.Id);
+            entity.Property(slider => slider.Id).ValueGeneratedOnAdd();
+            entity.Property(slider => slider.ImagePath).HasMaxLength(260).IsRequired();
+            entity.Property(slider => slider.AltText).HasMaxLength(160);
+            entity.Property(slider => slider.Language).HasMaxLength(2).HasDefaultValue("en").IsRequired();
+            entity.Property(slider => slider.IsMobile).HasDefaultValue(false);
+            entity.Property(slider => slider.SortOrder).IsRequired();
+            entity.Property(slider => slider.CreatedAtUtc).IsRequired();
+            entity.HasIndex(slider => new { slider.Language, slider.IsMobile, slider.SortOrder });
         });
     }
 }

@@ -2,11 +2,20 @@ namespace El_Sim.Web.Controllers;
 
 public class AdminController : Controller
 {
-    private readonly ElSimDbContext _dbContext;
+    private const int MaxSlidersPerType = 6;
 
-    public AdminController(ElSimDbContext dbContext)
+    private readonly ElSimDbContext _dbContext;
+    private readonly SliderImageProcessor _sliderImageProcessor;
+    private readonly IWebHostEnvironment _environment;
+
+    public AdminController(
+        ElSimDbContext dbContext,
+        SliderImageProcessor sliderImageProcessor,
+        IWebHostEnvironment environment)
     {
         _dbContext = dbContext;
+        _sliderImageProcessor = sliderImageProcessor;
+        _environment = environment;
     }
 
     public IActionResult Index()
@@ -60,6 +69,15 @@ public class AdminController : Controller
         }
 
         return View(BuildProductEditor(metadata, await GetAdminProducts(metadata.Key)));
+    }
+
+    public async Task<IActionResult> Sliders()
+    {
+        return View(new AdminSliderListViewModel
+        {
+            DesktopSliders = await GetAdminSliders(false),
+            MobileSliders = await GetAdminSliders(true)
+        });
     }
 
     [HttpPost]
@@ -188,6 +206,194 @@ public class AdminController : Controller
         }
 
         return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddSlider(IFormFile sliderImage, bool isMobile, string? language, string? altText)
+    {
+        var sliderLanguages = GetSliderLanguages(language);
+
+        if (sliderImage is null || sliderImage.Length == 0)
+        {
+            TempData["AdminError"] = "Choose a slider image.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        if (sliderImage.Length > 3 * 1024 * 1024)
+        {
+            TempData["AdminError"] = "Slider image must be 3 MB or less.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        var extension = Path.GetExtension(sliderImage.FileName).ToLowerInvariant();
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".gif", ".png", ".jpg", ".jpeg" };
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            TempData["AdminError"] = "Only gif, png, jpg images are accepted.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        var fullLanguage = await _dbContext.HomeSliders
+            .Where(slider => sliderLanguages.Contains(slider.Language) && slider.IsMobile == isMobile)
+            .GroupBy(slider => slider.Language)
+            .Where(group => group.Count() >= MaxSlidersPerType)
+            .Select(group => group.Key)
+            .FirstOrDefaultAsync();
+
+        if (!string.IsNullOrWhiteSpace(fullLanguage))
+        {
+            TempData["AdminError"] = isMobile
+                ? "Mobile sliders limit is 6."
+                : "Desktop sliders limit is 6.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        var nextSortOrders = await _dbContext.HomeSliders
+            .Where(slider => sliderLanguages.Contains(slider.Language) && slider.IsMobile == isMobile)
+            .GroupBy(slider => slider.Language)
+            .Select(group => new { Language = group.Key, SortOrder = group.Max(slider => slider.SortOrder) })
+            .ToListAsync();
+
+        foreach (var sliderLanguage in sliderLanguages)
+        {
+            var uploadRoot = Path.Combine(_environment.WebRootPath, "Uploads", "Sliders", sliderLanguage, isMobile ? "Mobile" : "Desktop");
+            Directory.CreateDirectory(uploadRoot);
+            var fileName = $"{Guid.NewGuid():N}.webp";
+            var outputPath = Path.Combine(uploadRoot, fileName);
+
+            try
+            {
+                await using var stream = sliderImage.OpenReadStream();
+                await _sliderImageProcessor.SaveWebpAsync(stream, outputPath, isMobile, HttpContext.RequestAborted);
+            }
+            catch
+            {
+                TempData["AdminError"] = "Slider image could not be processed.";
+                return RedirectToAction(nameof(Sliders));
+            }
+
+            var nextSortOrder = nextSortOrders.FirstOrDefault(item => item.Language == sliderLanguage)?.SortOrder ?? 0;
+
+            _dbContext.HomeSliders.Add(new HomeSlider
+            {
+                ImagePath = $"/Uploads/Sliders/{sliderLanguage}/{(isMobile ? "Mobile" : "Desktop")}/{fileName}",
+                AltText = (altText ?? string.Empty).Trim(),
+                Language = sliderLanguage,
+                IsMobile = isMobile,
+                SortOrder = nextSortOrder + 10,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+        }
+
+        await _dbContext.SaveChangesAsync();
+        TempData["AdminMessage"] = "Slider added.";
+
+        return RedirectToAction(nameof(Sliders));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateSliders(AdminSliderUpdateViewModel model)
+    {
+        var editedSliders = model.DesktopSliders.Concat(model.MobileSliders).ToList();
+        var ids = editedSliders.Select(slider => slider.Id).ToList();
+        var sliders = await _dbContext.HomeSliders
+            .Where(slider => ids.Contains(slider.Id))
+            .ToListAsync();
+
+        foreach (var editedSlider in editedSliders)
+        {
+            var slider = sliders.FirstOrDefault(item => item.Id == editedSlider.Id);
+
+            if (slider is null)
+            {
+                continue;
+            }
+
+            slider.AltText = (editedSlider.AltText ?? string.Empty).Trim();
+            slider.SortOrder = editedSlider.SortOrder;
+        }
+
+        await _dbContext.SaveChangesAsync();
+        TempData["AdminMessage"] = "Sliders updated.";
+
+        return RedirectToAction(nameof(Sliders));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteSlider(int id)
+    {
+        var slider = await _dbContext.HomeSliders.FindAsync(id);
+
+        if (slider is not null)
+        {
+            DeleteSliderImage(slider.ImagePath);
+            _dbContext.HomeSliders.Remove(slider);
+            await _dbContext.SaveChangesAsync();
+            TempData["AdminMessage"] = "Slider deleted.";
+        }
+
+        return RedirectToAction(nameof(Sliders));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateSliderImage(int id, IFormFile sliderImage)
+    {
+        var slider = await _dbContext.HomeSliders.FindAsync(id);
+
+        if (slider is null)
+        {
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        if (sliderImage is null || sliderImage.Length == 0)
+        {
+            TempData["AdminError"] = "Choose a slider image.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        if (sliderImage.Length > 3 * 1024 * 1024)
+        {
+            TempData["AdminError"] = "Slider image must be 3 MB or less.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        var extension = Path.GetExtension(sliderImage.FileName).ToLowerInvariant();
+        var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".gif", ".png", ".jpg", ".jpeg" };
+
+        if (!allowedExtensions.Contains(extension))
+        {
+            TempData["AdminError"] = "Only gif, png, jpg images are accepted.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        var uploadRoot = Path.Combine(_environment.WebRootPath, "Uploads", "Sliders", slider.Language, slider.IsMobile ? "Mobile" : "Desktop");
+        Directory.CreateDirectory(uploadRoot);
+        var fileName = $"{Guid.NewGuid():N}.webp";
+        var outputPath = Path.Combine(uploadRoot, fileName);
+        var oldImagePath = slider.ImagePath;
+
+        try
+        {
+            await using var stream = sliderImage.OpenReadStream();
+            await _sliderImageProcessor.SaveWebpAsync(stream, outputPath, slider.IsMobile, HttpContext.RequestAborted);
+        }
+        catch
+        {
+            TempData["AdminError"] = "Slider image could not be processed.";
+            return RedirectToAction(nameof(Sliders));
+        }
+
+        slider.ImagePath = $"/Uploads/Sliders/{slider.Language}/{(slider.IsMobile ? "Mobile" : "Desktop")}/{fileName}";
+        await _dbContext.SaveChangesAsync();
+        DeleteSliderImage(oldImagePath);
+        TempData["AdminMessage"] = "Slider image updated.";
+
+        return RedirectToAction(nameof(Sliders));
     }
 
     [HttpPost]
@@ -328,6 +534,26 @@ public class AdminController : Controller
             .ToListAsync();
     }
 
+    private async Task<List<HomeSliderViewModel>> GetAdminSliders(bool isMobile)
+    {
+        return await _dbContext.HomeSliders
+            .AsNoTracking()
+            .Where(slider => slider.IsMobile == isMobile)
+            .OrderBy(slider => slider.Language == "en" ? 0 : slider.Language == "ru" ? 1 : 2)
+            .ThenBy(slider => slider.SortOrder)
+            .ThenBy(slider => slider.Id)
+            .Select(slider => new HomeSliderViewModel
+                {
+                    Id = slider.Id,
+                    ImagePath = slider.ImagePath,
+                    AltText = slider.AltText,
+                    Language = slider.Language,
+                    IsMobile = slider.IsMobile,
+                    SortOrder = slider.SortOrder
+                })
+            .ToListAsync();
+    }
+
     private static AdminProductEditorViewModel BuildProductEditor(ProductCategoryMetadata metadata, List<AdminProductItemViewModel> products)
     {
         return new AdminProductEditorViewModel
@@ -345,4 +571,37 @@ public class AdminController : Controller
             .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
     }
 
+    private static string NormalizeSliderLanguage(string? language)
+    {
+        return language?.Trim().ToLowerInvariant() switch
+        {
+            "ru" => "ru",
+            "az" => "az",
+            _ => "en"
+        };
+    }
+
+    private static List<string> GetSliderLanguages(string? language)
+    {
+        return string.Equals(language?.Trim(), "all", StringComparison.OrdinalIgnoreCase)
+            ? ["en", "ru", "az"]
+            : [NormalizeSliderLanguage(language)];
+    }
+
+    private void DeleteSliderImage(string? sliderImagePath)
+    {
+        if (string.IsNullOrWhiteSpace(sliderImagePath))
+        {
+            return;
+        }
+
+        var relativePath = sliderImagePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(_environment.WebRootPath, relativePath));
+        var sliderRoot = Path.GetFullPath(Path.Combine(_environment.WebRootPath, "Uploads", "Sliders"));
+
+        if (fullPath.StartsWith(sliderRoot, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(fullPath))
+        {
+            System.IO.File.Delete(fullPath);
+        }
+    }
 }

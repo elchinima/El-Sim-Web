@@ -29,6 +29,9 @@
       <a class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "ProductCategory") ? "is-active" : "")" href="/admin/products">
         <span>Products</span>
       </a>
+      <a class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Sliders") ? "is-active" : "")" href="/admin/sliders">
+        <span>Sliders</span>
+      </a>
     </nav>
 
     <a class="admin-exit" href="/">Site</a>
