@@ -16,6 +16,11 @@ builder.Services.AddScoped<ProfileImageProcessor>();
 builder.Services.AddScoped<SliderImageProcessor>();
 builder.Services.AddScoped<AccountDataInitializer>();
 builder.Services.AddScoped<ProductDataInitializer>();
+builder.Services.AddScoped<PurchaseDataInitializer>();
+builder.Services.AddScoped<ProductPricingService>();
+builder.Services.AddScoped<StripePaymentService>();
+builder.Services.AddHttpClient<ExchangeRateService>();
+builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -33,6 +38,7 @@ using (var scope = app.Services.CreateScope())
 {
     await scope.ServiceProvider.GetRequiredService<AccountDataInitializer>().InitializeAsync();
     await scope.ServiceProvider.GetRequiredService<ProductDataInitializer>().InitializeAsync();
+    await scope.ServiceProvider.GetRequiredService<PurchaseDataInitializer>().InitializeAsync();
 }
 
 if (!app.Environment.IsDevelopment())
@@ -85,6 +91,11 @@ app.MapControllerRoute(
     name: "profile-html",
     pattern: "profile.html",
     defaults: new { controller = "Home", action = "Profile" });
+
+app.MapControllerRoute(
+    name: "wallet-topup-success",
+    pattern: "wallet/topup/success",
+    defaults: new { controller = "Home", action = "TopUpSuccess" });
 
 app.MapControllerRoute(
     name: "admin",

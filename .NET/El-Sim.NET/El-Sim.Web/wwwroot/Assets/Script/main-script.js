@@ -258,15 +258,17 @@ const getConfirmDialog = () => {
 };
 
 const showConfirmModal = ({ title = "Confirm action?", message, button = "Confirm" }) => {
+    const language = localStorage.getItem("elsim-language") || "en";
     const dialog = getConfirmDialog();
     const titleElement = dialog.querySelector("[data-confirm-title]");
     const textElement = dialog.querySelector("[data-confirm-text]");
     const cancelButton = dialog.querySelector("[data-confirm-cancel]");
     const submitButton = dialog.querySelector("[data-confirm-submit]");
 
-    titleElement.textContent = title;
-    textElement.textContent = message;
-    submitButton.textContent = button;
+    titleElement.textContent = window.getElsimTranslation?.(title, language) || title;
+    textElement.textContent = window.getElsimTranslation?.(message, language) || message;
+    cancelButton.textContent = window.getElsimTranslation?.("Cancel", language) || "Cancel";
+    submitButton.textContent = window.getElsimTranslation?.(button, language) || button;
 
     return new Promise((resolve) => {
         const cleanup = () => {
@@ -309,7 +311,7 @@ document.querySelectorAll("[data-open-confirm-form]").forEach((button) => {
 
         const confirmed = await showConfirmModal({
             title: button.dataset.confirmTitle || "Confirm action?",
-            message: button.dataset.confirmMessage,
+            message: button.dataset[`confirmMessage${(localStorage.getItem("elsim-language") || "en").replace(/^./, (letter) => letter.toUpperCase())}`] || button.dataset.confirmMessage,
             button: button.dataset.confirmButton || "Confirm"
         });
 
@@ -362,7 +364,7 @@ document.querySelectorAll("[data-confirm-message]").forEach((form) => {
 
         const confirmed = await showConfirmModal({
             title: form.dataset.confirmTitle || "Confirm action?",
-            message: form.dataset.confirmMessage,
+            message: form.dataset[`confirmMessage${(localStorage.getItem("elsim-language") || "en").replace(/^./, (letter) => letter.toUpperCase())}`] || form.dataset.confirmMessage,
             button: form.dataset.confirmButton || "Confirm"
         });
 
@@ -375,6 +377,23 @@ document.querySelectorAll("[data-confirm-message]").forEach((form) => {
             }
         }
     });
+});
+
+document.querySelectorAll("[data-static-ip-toggle]").forEach((checkbox) => {
+    const form = checkbox.closest("form");
+
+    if (!form) {
+        return;
+    }
+
+    const setConfirmMessage = () => {
+        form.dataset.confirmMessage = checkbox.checked
+            ? checkbox.dataset.staticConfirm
+            : checkbox.dataset.baseConfirm;
+    };
+
+    checkbox.addEventListener("change", setConfirmMessage);
+    setConfirmMessage();
 });
 
 document.querySelectorAll("[data-confirm-two-factor]").forEach((form) => {

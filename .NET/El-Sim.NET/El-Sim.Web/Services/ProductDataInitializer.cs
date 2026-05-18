@@ -23,6 +23,7 @@ public class ProductDataInitializer
                     [Price] nvarchar(40) NOT NULL,
                     [PriceRu] nvarchar(40) NOT NULL CONSTRAINT [DF_Products_PriceRu] DEFAULT N'',
                     [PriceAz] nvarchar(40) NOT NULL CONSTRAINT [DF_Products_PriceAz] DEFAULT N'',
+                    [Currency] nvarchar(3) NOT NULL CONSTRAINT [DF_Products_Currency] DEFAULT N'AZN',
                     [Period] nvarchar(40) NOT NULL CONSTRAINT [DF_Products_Period] DEFAULT N'',
                     [PeriodRu] nvarchar(40) NOT NULL CONSTRAINT [DF_Products_PeriodRu] DEFAULT N'',
                     [PeriodAz] nvarchar(40) NOT NULL CONSTRAINT [DF_Products_PeriodAz] DEFAULT N'',
@@ -60,6 +61,30 @@ public class ProductDataInitializer
 
                 CREATE INDEX [IX_HomeSliders_Language_IsMobile_SortOrder] ON [HomeSliders] ([Language], [IsMobile], [SortOrder]);
             END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF COL_LENGTH(N'[Products]', N'Currency') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [Currency] nvarchar(3) NOT NULL CONSTRAINT [DF_Products_Currency] DEFAULT N'AZN';
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            UPDATE [Products]
+            SET [Currency] = N'USD'
+            WHERE ([Price] LIKE N'%$%' OR [Price] LIKE N'%USD%') AND [Currency] <> N'USD';
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            UPDATE [Products]
+            SET
+                [Price] = LTRIM(RTRIM(REPLACE(REPLACE(REPLACE([Price], N'$', N''), N'USD', N''), N'AZN', N''))),
+                [PriceRu] = LTRIM(RTRIM(REPLACE(REPLACE(REPLACE([PriceRu], N'$', N''), N'USD', N''), N'AZN', N''))),
+                [PriceAz] = LTRIM(RTRIM(REPLACE(REPLACE(REPLACE([PriceAz], N'$', N''), N'USD', N''), N'AZN', N'')))
+            WHERE [Price] LIKE N'%$%' OR [Price] LIKE N'%USD%' OR [Price] LIKE N'%AZN%'
+                OR [PriceRu] LIKE N'%$%' OR [PriceRu] LIKE N'%USD%' OR [PriceRu] LIKE N'%AZN%'
+                OR [PriceAz] LIKE N'%$%' OR [PriceAz] LIKE N'%USD%' OR [PriceAz] LIKE N'%AZN%';
             """);
 
         await _dbContext.Database.ExecuteSqlRawAsync("""
@@ -122,38 +147,38 @@ public class ProductDataInitializer
     {
         List<Product> products =
         [
-            new Product { Category = "esim", Name = "Start", Price = "3 AZN", Description = "5 GB of mobile data", Features = "5 GB of mobile data", ButtonText = "Choose", SortOrder = 10 },
-            new Product { Category = "esim", Name = "Smart", Price = "5 AZN", Description = "10 GB, calls and SMS", Features = "10 GB, calls and SMS", ButtonText = "Choose", IsFeatured = true, IsFavorite = true, SortOrder = 20 },
-            new Product { Category = "esim", Name = "Max", Price = "9 AZN", Description = "Unlimited mobile data", Features = "Unlimited mobile data", ButtonText = "Choose", SortOrder = 30 },
+            new Product { Category = "esim", Name = "Start", Price = "3", Currency = "AZN", Description = "5 GB of mobile data", Features = "5 GB of mobile data", ButtonText = "Choose", SortOrder = 10 },
+            new Product { Category = "esim", Name = "Smart", Price = "5", Currency = "AZN", Description = "10 GB, calls and SMS", Features = "10 GB, calls and SMS", ButtonText = "Choose", IsFeatured = true, IsFavorite = true, SortOrder = 20 },
+            new Product { Category = "esim", Name = "Max", Price = "9", Currency = "AZN", Description = "Unlimited mobile data", Features = "Unlimited mobile data", ButtonText = "Choose", SortOrder = 30 },
 
-            new Product { Category = "pass", Name = "Pass", Price = "4.00 AZN", Period = "30 days", Features = "Up to 50 free calls\nBonuses from our partners\nOpportunity to earn up to 5GB\nConnection to next-generation 5G internet\nUp to 50% ad blocking", ButtonText = "Choose Pass", IsFeatured = true, IsFavorite = true, SortOrder = 10 },
-            new Product { Category = "pass", Name = "Pass Plus", Price = "7.00 AZN", Period = "30 days", Features = "5G+ internet connection\nUp to 100 free calls\nOpportunity to earn up to 10GB\nHigher bonuses from partners\nUp to 70% ad blocking", ButtonText = "Choose Plus", SortOrder = 20 },
-            new Product { Category = "pass", Name = "Pass Ultra", Price = "11.00 AZN", Period = "30 days", Features = "VIP customer service\n5G+ internet connection\nUp to 150 free calls\nOpportunity to earn up to 15GB\nUltra bonuses from partners\nAbility to change the app icon\nUp to 90% ad blocking\nNetwork access anywhere in the Republic of Azerbaijan", ButtonText = "Choose Ultra", SortOrder = 30 },
+            new Product { Category = "pass", Name = "Pass", Price = "4.00", Currency = "AZN", Period = "30 days", Features = "Up to 50 free calls\nBonuses from our partners\nOpportunity to earn up to 5GB\nConnection to next-generation 5G internet\nUp to 50% ad blocking", ButtonText = "Choose Pass", IsFeatured = true, IsFavorite = true, SortOrder = 10 },
+            new Product { Category = "pass", Name = "Pass Plus", Price = "7.00", Currency = "AZN", Period = "30 days", Features = "5G+ internet connection\nUp to 100 free calls\nOpportunity to earn up to 10GB\nHigher bonuses from partners\nUp to 70% ad blocking", ButtonText = "Choose Plus", SortOrder = 20 },
+            new Product { Category = "pass", Name = "Pass Ultra", Price = "11.00", Currency = "AZN", Period = "30 days", Features = "VIP customer service\n5G+ internet connection\nUp to 150 free calls\nOpportunity to earn up to 15GB\nUltra bonuses from partners\nAbility to change the app icon\nUp to 90% ad blocking\nNetwork access anywhere in the Republic of Azerbaijan", ButtonText = "Choose Ultra", SortOrder = 30 },
 
-            new Product { Category = "tariffs", Name = "Eco", Price = "3.00 AZN", Period = "30 days", Features = "1GB internet\n30 free domestic minutes\n30 free domestic SMS", ButtonText = "Choose Eco", SortOrder = 10 },
-            new Product { Category = "tariffs", Name = "Standard", Price = "8.00 AZN", Period = "30 days", Features = "5GB internet\n50 free domestic minutes\n50 free domestic SMS", ButtonText = "Choose Standard", IsFeatured = true, IsFavorite = true, SortOrder = 20 },
-            new Product { Category = "tariffs", Name = "Plus", Price = "18.00 AZN", Period = "30 days", Features = "15GB internet\n150 free domestic minutes\n150 free domestic SMS", ButtonText = "Choose Plus", SortOrder = 30 },
-            new Product { Category = "tariffs", Name = "Pro", Price = "28.00 AZN", Period = "30 days", Features = "35GB internet\n350 free domestic minutes\n350 free domestic SMS", ButtonText = "Choose Pro", IsFeatured = true, IsFavorite = true, SortOrder = 40 },
-            new Product { Category = "tariffs", Name = "Premium", Price = "48.00 AZN", Period = "30 days", Features = "80GB internet\n800 free domestic minutes\n800 free domestic SMS", ButtonText = "Choose Premium", SortOrder = 50 },
-            new Product { Category = "tariffs", Name = "Ultra", Price = "78.00 AZN", Period = "30 days", Features = "120GB internet\n1200 free domestic minutes\n1200 free domestic SMS", ButtonText = "Choose Ultra", SortOrder = 60 },
+            new Product { Category = "tariffs", Name = "Eco", Price = "3.00", Currency = "AZN", Period = "30 days", Features = "1GB internet\n30 free domestic minutes\n30 free domestic SMS", ButtonText = "Choose Eco", SortOrder = 10 },
+            new Product { Category = "tariffs", Name = "Standard", Price = "8.00", Currency = "AZN", Period = "30 days", Features = "5GB internet\n50 free domestic minutes\n50 free domestic SMS", ButtonText = "Choose Standard", IsFeatured = true, IsFavorite = true, SortOrder = 20 },
+            new Product { Category = "tariffs", Name = "Plus", Price = "18.00", Currency = "AZN", Period = "30 days", Features = "15GB internet\n150 free domestic minutes\n150 free domestic SMS", ButtonText = "Choose Plus", SortOrder = 30 },
+            new Product { Category = "tariffs", Name = "Pro", Price = "28.00", Currency = "AZN", Period = "30 days", Features = "35GB internet\n350 free domestic minutes\n350 free domestic SMS", ButtonText = "Choose Pro", IsFeatured = true, IsFavorite = true, SortOrder = 40 },
+            new Product { Category = "tariffs", Name = "Premium", Price = "48.00", Currency = "AZN", Period = "30 days", Features = "80GB internet\n800 free domestic minutes\n800 free domestic SMS", ButtonText = "Choose Premium", SortOrder = 50 },
+            new Product { Category = "tariffs", Name = "Ultra", Price = "78.00", Currency = "AZN", Period = "30 days", Features = "120GB internet\n1200 free domestic minutes\n1200 free domestic SMS", ButtonText = "Choose Ultra", SortOrder = 60 },
 
-            new Product { Category = "global", Name = "Eco G", Price = "$3.00", Period = "30 days", Features = "1GB internet", ButtonText = "Choose Eco G", SortOrder = 10 },
-            new Product { Category = "global", Name = "Eco G2", Price = "$1.50", Period = "7 days", Features = "1GB internet", ButtonText = "Choose Eco G2", SortOrder = 20 },
-            new Product { Category = "global", Name = "Standard G", Price = "$8.00", Period = "30 days", Features = "5GB internet", ButtonText = "Choose Standard G", SortOrder = 30 },
-            new Product { Category = "global", Name = "Standard G2", Price = "$4.00", Period = "7 days", Features = "5GB internet", ButtonText = "Choose Standard G2", SortOrder = 40 },
-            new Product { Category = "global", Name = "Plus G", Price = "$18.00", Period = "30 days", Features = "15GB internet", ButtonText = "Choose Plus G", IsFeatured = true, IsFavorite = true, SortOrder = 50 },
-            new Product { Category = "global", Name = "Plus G2", Price = "$9.00", Period = "7 days", Features = "15GB internet", ButtonText = "Choose Plus G2", SortOrder = 60 },
-            new Product { Category = "global", Name = "Pro G", Price = "$28.00", Period = "30 days", Features = "35GB internet", ButtonText = "Choose Pro G", SortOrder = 70 },
-            new Product { Category = "global", Name = "Pro G2", Price = "$14.00", Period = "7 days", Features = "35GB internet", ButtonText = "Choose Pro G2", SortOrder = 80 },
-            new Product { Category = "global", Name = "Premium G", Price = "$48.00", Period = "30 days", Features = "80GB internet", ButtonText = "Choose Premium G", SortOrder = 90 },
-            new Product { Category = "global", Name = "Premium G2", Price = "$24.00", Period = "7 days", Features = "80GB internet", ButtonText = "Choose Premium G2", SortOrder = 100 },
-            new Product { Category = "global", Name = "Ultra G", Price = "$78.00", Period = "30 days", Features = "120GB internet", ButtonText = "Choose Ultra G", IsFeatured = true, IsFavorite = true, SortOrder = 110 },
-            new Product { Category = "global", Name = "Ultra G2", Price = "$39.00", Period = "7 days", Features = "120GB internet", ButtonText = "Choose Ultra G2", SortOrder = 120 },
+            new Product { Category = "global", Name = "Eco G", Price = "3.00", Currency = "USD", Period = "30 days", Features = "1GB internet", ButtonText = "Choose Eco G", SortOrder = 10 },
+            new Product { Category = "global", Name = "Eco G2", Price = "1.50", Currency = "USD", Period = "7 days", Features = "1GB internet", ButtonText = "Choose Eco G2", SortOrder = 20 },
+            new Product { Category = "global", Name = "Standard G", Price = "8.00", Currency = "USD", Period = "30 days", Features = "5GB internet", ButtonText = "Choose Standard G", SortOrder = 30 },
+            new Product { Category = "global", Name = "Standard G2", Price = "4.00", Currency = "USD", Period = "7 days", Features = "5GB internet", ButtonText = "Choose Standard G2", SortOrder = 40 },
+            new Product { Category = "global", Name = "Plus G", Price = "18.00", Currency = "USD", Period = "30 days", Features = "15GB internet", ButtonText = "Choose Plus G", IsFeatured = true, IsFavorite = true, SortOrder = 50 },
+            new Product { Category = "global", Name = "Plus G2", Price = "9.00", Currency = "USD", Period = "7 days", Features = "15GB internet", ButtonText = "Choose Plus G2", SortOrder = 60 },
+            new Product { Category = "global", Name = "Pro G", Price = "28.00", Currency = "USD", Period = "30 days", Features = "35GB internet", ButtonText = "Choose Pro G", SortOrder = 70 },
+            new Product { Category = "global", Name = "Pro G2", Price = "14.00", Currency = "USD", Period = "7 days", Features = "35GB internet", ButtonText = "Choose Pro G2", SortOrder = 80 },
+            new Product { Category = "global", Name = "Premium G", Price = "48.00", Currency = "USD", Period = "30 days", Features = "80GB internet", ButtonText = "Choose Premium G", SortOrder = 90 },
+            new Product { Category = "global", Name = "Premium G2", Price = "24.00", Currency = "USD", Period = "7 days", Features = "80GB internet", ButtonText = "Choose Premium G2", SortOrder = 100 },
+            new Product { Category = "global", Name = "Ultra G", Price = "78.00", Currency = "USD", Period = "30 days", Features = "120GB internet", ButtonText = "Choose Ultra G", IsFeatured = true, IsFavorite = true, SortOrder = 110 },
+            new Product { Category = "global", Name = "Ultra G2", Price = "39.00", Currency = "USD", Period = "7 days", Features = "120GB internet", ButtonText = "Choose Ultra G2", SortOrder = 120 },
 
-            new Product { Category = "wifi", Name = "Optic 1S", Price = "100.00 AZN", Features = "Up to 1 GBit/s\nMinimum Wi-Fi 6", ButtonText = "Choose 1S", SortOrder = 10 },
-            new Product { Category = "wifi", Name = "Optic 1.5S", Price = "230.00 AZN", Features = "Up to 5 GBit/s\nMinimum Wi-Fi 6E", ButtonText = "Choose 1.5S", SortOrder = 20 },
-            new Product { Category = "wifi", Name = "Optic 2S", Price = "450.00 AZN", Features = "Up to 10 GBit/s\nMinimum Wi-Fi 7", ButtonText = "Choose 2S", IsFeatured = true, IsFavorite = true, SortOrder = 30 },
-            new Product { Category = "wifi", Name = "Optic 2S+", Price = "800.00 AZN", Features = "Up to 20 GBit/s\nMinimum Wi-Fi 7", ButtonText = "Choose 2S+", SortOrder = 40 }
+            new Product { Category = "wifi", Name = "Optic 1S", Price = "100.00", Currency = "AZN", Features = "Up to 1 GBit/s\nMinimum Wi-Fi 6", ButtonText = "Choose 1S", SortOrder = 10 },
+            new Product { Category = "wifi", Name = "Optic 1.5S", Price = "230.00", Currency = "AZN", Features = "Up to 5 GBit/s\nMinimum Wi-Fi 6E", ButtonText = "Choose 1.5S", SortOrder = 20 },
+            new Product { Category = "wifi", Name = "Optic 2S", Price = "450.00", Currency = "AZN", Features = "Up to 10 GBit/s\nMinimum Wi-Fi 7", ButtonText = "Choose 2S", IsFeatured = true, IsFavorite = true, SortOrder = 30 },
+            new Product { Category = "wifi", Name = "Optic 2S+", Price = "800.00", Currency = "AZN", Features = "Up to 20 GBit/s\nMinimum Wi-Fi 7", ButtonText = "Choose 2S+", SortOrder = 40 }
         ];
 
         foreach (var product in products)
@@ -181,6 +206,7 @@ public class ProductDataInitializer
             product.NameAz = Fill(product.NameAz, seedProduct.NameAz);
             product.PriceRu = Fill(product.PriceRu, seedProduct.PriceRu);
             product.PriceAz = Fill(product.PriceAz, seedProduct.PriceAz);
+            product.Currency = Fill(product.Currency, seedProduct.Currency);
             product.PeriodRu = Fill(product.PeriodRu, seedProduct.PeriodRu);
             product.PeriodAz = Fill(product.PeriodAz, seedProduct.PeriodAz);
             product.DescriptionRu = Fill(product.DescriptionRu, seedProduct.DescriptionRu);

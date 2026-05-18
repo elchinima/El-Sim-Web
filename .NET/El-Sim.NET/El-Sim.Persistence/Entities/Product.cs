@@ -10,6 +10,7 @@ public class Product
     public string Price { get; set; } = string.Empty;
     public string PriceRu { get; set; } = string.Empty;
     public string PriceAz { get; set; } = string.Empty;
+    public string Currency { get; set; } = "AZN";
     public string Period { get; set; } = string.Empty;
     public string PeriodRu { get; set; } = string.Empty;
     public string PeriodAz { get; set; } = string.Empty;
@@ -26,4 +27,5 @@ public class Product
     public bool IsFeatured { get; set; }
     public bool IsFavorite { get; set; }
     public int SortOrder { get; set; }
+    public ICollection<ProductPurchase> Purchases { get; set; } = new List<ProductPurchase>();
 }

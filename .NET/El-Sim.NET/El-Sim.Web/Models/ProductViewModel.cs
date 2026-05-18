@@ -10,6 +10,14 @@ public class ProductCardViewModel
     public string Price { get; set; } = string.Empty;
     public string PriceRu { get; set; } = string.Empty;
     public string PriceAz { get; set; } = string.Empty;
+    public string Currency { get; set; } = "AZN";
+    public decimal Amount { get; set; }
+    public decimal TotalAzn { get; set; }
+    public decimal? ExchangeRate { get; set; }
+    public decimal CommissionRate { get; set; }
+    public string DisplayPrice => FormatPrice(Price, Currency);
+    public string DisplayPriceRu => FormatPrice(string.IsNullOrWhiteSpace(PriceRu) ? Price : PriceRu, Currency);
+    public string DisplayPriceAz => FormatPrice(string.IsNullOrWhiteSpace(PriceAz) ? Price : PriceAz, Currency);
     public string Period { get; set; } = string.Empty;
     public string PeriodRu { get; set; } = string.Empty;
     public string PeriodAz { get; set; } = string.Empty;
@@ -26,6 +34,17 @@ public class ProductCardViewModel
     public List<string> Features { get; set; } = [];
     public List<string> FeaturesRu { get; set; } = [];
     public List<string> FeaturesAz { get; set; } = [];
+
+    private static string FormatPrice(string price, string currency)
+    {
+        var cleanPrice = (price ?? string.Empty)
+            .Replace("$", string.Empty)
+            .Replace("USD", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("AZN", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Trim();
+
+        return string.IsNullOrWhiteSpace(cleanPrice) ? string.Empty : $"{cleanPrice} {currency}";
+    }
 }
 
 public class HomeProductsViewModel
@@ -33,6 +52,7 @@ public class HomeProductsViewModel
     public List<ProductCardViewModel> EsimProducts { get; set; } = [];
     public List<HomeSliderViewModel> DesktopSliders { get; set; } = [];
     public List<HomeSliderViewModel> MobileSliders { get; set; } = [];
+    public ExchangeRateResult? ExchangeRate { get; set; }
 }
 
 public class HomeSliderViewModel
@@ -51,6 +71,8 @@ public class ProductCategoryPageViewModel
     public string Title { get; set; } = string.Empty;
     public string Eyebrow { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public ExchangeRateResult? ExchangeRate { get; set; }
+    public decimal WifiStaticIpPercent { get; set; } = 5m;
     public List<ProductCardViewModel> Products { get; set; } = [];
 }
 
@@ -72,6 +94,7 @@ public class AdminProductEditorViewModel
     public string Category { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public decimal WifiStaticIpPercent { get; set; } = 5m;
     public List<AdminProductItemViewModel> Products { get; set; } = [];
 }
 
@@ -84,6 +107,8 @@ public class AdminProductItemViewModel
     public string Price { get; set; } = string.Empty;
     public string PriceRu { get; set; } = string.Empty;
     public string PriceAz { get; set; } = string.Empty;
+    public string Currency { get; set; } = "AZN";
+    public string DisplayPrice => FormatPrice(Price, Currency);
     public string Period { get; set; } = string.Empty;
     public string PeriodRu { get; set; } = string.Empty;
     public string PeriodAz { get; set; } = string.Empty;
@@ -100,6 +125,17 @@ public class AdminProductItemViewModel
     public bool IsFeatured { get; set; }
     public bool IsFavorite { get; set; }
     public int SortOrder { get; set; }
+
+    private static string FormatPrice(string price, string currency)
+    {
+        var cleanPrice = (price ?? string.Empty)
+            .Replace("$", string.Empty)
+            .Replace("USD", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("AZN", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Trim();
+
+        return string.IsNullOrWhiteSpace(cleanPrice) ? string.Empty : $"{cleanPrice} {currency}";
+    }
 }
 
 public class AdminSliderListViewModel

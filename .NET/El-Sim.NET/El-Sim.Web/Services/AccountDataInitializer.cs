@@ -18,11 +18,19 @@ public class AccountDataInitializer
                     [Id] int IDENTITY(1,1) NOT NULL CONSTRAINT [PK_Account] PRIMARY KEY,
                     [Email] nvarchar(254) NULL,
                     [ProfileImagePath] nvarchar(260) NULL,
+                    [BalanceAzn] decimal(18,2) NOT NULL CONSTRAINT [DF_Account_BalanceAzn] DEFAULT 0,
                     [IsTwoFactorEnabled] bit NOT NULL CONSTRAINT [DF_Account_IsTwoFactorEnabled] DEFAULT CAST(0 AS bit),
                     [IsEmailNotificationsEnabled] bit NOT NULL CONSTRAINT [DF_Account_IsEmailNotificationsEnabled] DEFAULT CAST(0 AS bit),
                     [IsAdmin] bit NOT NULL CONSTRAINT [DF_Account_IsAdmin] DEFAULT CAST(0 AS bit),
                     [IsBlocked] bit NOT NULL CONSTRAINT [DF_Account_IsBlocked] DEFAULT CAST(0 AS bit)
                 );
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF COL_LENGTH(N'[Account]', N'BalanceAzn') IS NULL
+            BEGIN
+                ALTER TABLE [Account] ADD [BalanceAzn] decimal(18,2) NOT NULL CONSTRAINT [DF_Account_BalanceAzn] DEFAULT 0;
             END
             """);
 

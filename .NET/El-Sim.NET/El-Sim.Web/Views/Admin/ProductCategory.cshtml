@@ -25,6 +25,10 @@
   {
     <div class="admin-message">@adminMessage</div>
   }
+  @if (TempData["AdminError"] is string adminError)
+  {
+    <div class="admin-message is-error">@adminError</div>
+  }
 
   <form method="post" asp-action="ProductCategory" class="admin-product-form" data-confirm-message="Save product changes?" data-confirm-button="Save" data-save-products-form>
     @Html.AntiForgeryToken()
@@ -38,7 +42,7 @@
           <div>
             <span>EN</span>
             <strong>@Model.Products[index].Name</strong>
-            <p>@Model.Products[index].Price @if (!string.IsNullOrWhiteSpace(Model.Products[index].Period)) { <span>| @Model.Products[index].Period</span> }</p>
+            <p>@Model.Products[index].DisplayPrice @if (!string.IsNullOrWhiteSpace(Model.Products[index].Period)) { <span>| @Model.Products[index].Period</span> }</p>
           </div>
           <div class="admin-product-row-flags">
             <label class="admin-featured-toggle">
@@ -70,6 +74,13 @@
               <div class="field">
                 <label asp-for="Products[index].SortOrder">Sort order</label>
                 <input asp-for="Products[index].SortOrder" type="number">
+              </div>
+              <div class="field">
+                <label asp-for="Products[index].Currency">Currency</label>
+                <select asp-for="Products[index].Currency">
+                  <option value="AZN">AZN</option>
+                  <option value="USD">USD</option>
+                </select>
               </div>
               <div class="field admin-field-wide">
                 <label asp-for="Products[index].ButtonUrl">Button URL</label>
@@ -170,6 +181,25 @@
         </dialog>
       }
     </section>
+
+    @if (Model.Category == "wifi")
+    {
+      <section class="admin-panel wifi-static-ip-settings" aria-label="Wi-Fi static IP settings">
+        <div class="admin-panel-head">
+          <div>
+            <p class="eyebrow">wi-fi option</p>
+            <h2>Static IP</h2>
+          </div>
+          <span>Added to purchase total</span>
+        </div>
+        <div class="admin-product-fields">
+          <div class="field">
+            <label asp-for="WifiStaticIpPercent">Static IP percent</label>
+            <input asp-for="WifiStaticIpPercent" type="number" min="0" max="100" step="0.01">
+          </div>
+        </div>
+      </section>
+    }
 
     <div class="admin-sticky-actions">
       <button class="button button-primary" type="submit" name="saveProducts" value="true" data-save-products-button>Save products</button>

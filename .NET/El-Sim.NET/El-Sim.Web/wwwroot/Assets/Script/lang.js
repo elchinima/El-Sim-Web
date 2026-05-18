@@ -126,7 +126,7 @@ const translations = {
         "global beta": "global beta",
         "Global Beta": "Global Beta",
         "Travel data packages for early users with flexible 7-day and 30-day options.": "Туристические интернет-пакеты для ранних пользователей с гибкими вариантами на 7 и 30 дней.",
-        "$5 | 90 days": "$5 | 90 дней",
+        "5 USD | 90 days": "5 USD | 90 дней",
         "25% off all plans for first users": "Скидка 25% на все тарифы для первых пользователей"
     },
     az: {
@@ -245,7 +245,7 @@ const translations = {
         "Add a static IP to any optical internet package.": "İstənilən optik internet paketinə statik IP əlavə edin.",
         "global beta": "global beta",
         "Travel data packages for early users with flexible 7-day and 30-day options.": "İlk istifadəçilər üçün 7 və 30 günlük çevik internet paketləri.",
-        "$5 | 90 days": "$5 | 90 gün",
+        "5 USD | 90 days": "5 USD | 90 gün",
         "25% off all plans for first users": "İlk istifadəçilər üçün bütün tariflərdə 25% endirim"
     }
 };
@@ -282,6 +282,19 @@ Object.assign(translations.ru, {
     "Verify": "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044c"
 });
 
+Object.assign(translations.ru, {
+    "Balance": "\u0411\u0430\u043b\u0430\u043d\u0441",
+    "Top-up amount, AZN": "\u0421\u0443\u043c\u043c\u0430 \u043f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f, AZN",
+    "Top up": "\u041f\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u044c",
+    "Top up balance?": "\u041f\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u044c \u0431\u0430\u043b\u0430\u043d\u0441?",
+    "Pay": "\u041e\u043f\u043b\u0430\u0442\u0438\u0442\u044c",
+    "Buy": "\u041a\u0443\u043f\u0438\u0442\u044c",
+    "Purchases": "\u041f\u043e\u043a\u0443\u043f\u043a\u0438",
+    "Receipts": "\u0427\u0435\u043a\u0438",
+    "Confirm action?": "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435?",
+    "Balance top-up": "\u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u0431\u0430\u043b\u0430\u043d\u0441\u0430"
+});
+
 Object.assign(translations.az, {
     "user profile": "istifad\u0259\u00e7i profili",
     "Profile image": "Profil \u015f\u0259kli",
@@ -314,6 +327,19 @@ Object.assign(translations.az, {
     "Verify": "T\u0259sdiql\u0259"
 });
 
+Object.assign(translations.az, {
+    "Balance": "Balans",
+    "Top-up amount, AZN": "Art\u0131r\u0131lacaq m\u0259bl\u0259\u011f, AZN",
+    "Top up": "Balans art\u0131r",
+    "Top up balance?": "Balans art\u0131r\u0131ls\u0131n?",
+    "Pay": "\u00d6d\u0259",
+    "Buy": "Al",
+    "Purchases": "Al\u0131\u015flar",
+    "Receipts": "\u00c7ekl\u0259r",
+    "Confirm action?": "\u018fm\u0259liyyat\u0131 t\u0259sdiql\u0259yin?",
+    "Balance top-up": "Balans art\u0131r\u0131lmas\u0131"
+});
+
 const originalText = new WeakMap();
 
 const getTranslation = (text, language) => {
@@ -331,8 +357,18 @@ const getTranslation = (text, language) => {
             .replace(/up to/g, dictionary["up to"] || "up to");
     }
 
+    if (!dictionary[text] && text.startsWith("Buy ") && language === "ru") {
+        translated = text.replace(/^Buy /, "\u041a\u0443\u043f\u0438\u0442\u044c ").replace(" for ", " \u0437\u0430 ");
+    }
+
+    if (!dictionary[text] && text.startsWith("Buy ") && language === "az") {
+        translated = text.replace(/^Buy /, "").replace(" for ", " - ").replace(/\?$/, " al\u0131ns\u0131n?");
+    }
+
     return translated;
 };
+
+window.getElsimTranslation = getTranslation;
 
 const updateLanguageSliders = (language) => {
     const currentLanguage = translations[language] || language === "en" ? language : "en";

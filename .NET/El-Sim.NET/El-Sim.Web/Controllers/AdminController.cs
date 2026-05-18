@@ -68,7 +68,7 @@ public class AdminController : Controller
             return RedirectToAction(nameof(Products));
         }
 
-        return View(BuildProductEditor(metadata, await GetAdminProducts(metadata.Key)));
+        return View(await BuildProductEditorWithSettings(metadata, await GetAdminProducts(metadata.Key)));
     }
 
     public async Task<IActionResult> Sliders()
@@ -113,9 +113,10 @@ public class AdminController : Controller
             product.Name = (editedProduct.Name ?? string.Empty).Trim();
             product.NameRu = (editedProduct.NameRu ?? string.Empty).Trim();
             product.NameAz = (editedProduct.NameAz ?? string.Empty).Trim();
-            product.Price = (editedProduct.Price ?? string.Empty).Trim();
-            product.PriceRu = (editedProduct.PriceRu ?? string.Empty).Trim();
-            product.PriceAz = (editedProduct.PriceAz ?? string.Empty).Trim();
+            product.Price = NormalizePrice(editedProduct.Price);
+            product.PriceRu = NormalizePrice(editedProduct.PriceRu);
+            product.PriceAz = NormalizePrice(editedProduct.PriceAz);
+            product.Currency = NormalizeCurrency(editedProduct.Currency);
             product.Period = (editedProduct.Period ?? string.Empty).Trim();
             product.PeriodRu = (editedProduct.PeriodRu ?? string.Empty).Trim();
             product.PeriodAz = (editedProduct.PeriodAz ?? string.Empty).Trim();
@@ -132,6 +133,12 @@ public class AdminController : Controller
             product.IsFeatured = editedProduct.IsFeatured;
             product.IsFavorite = editedProduct.IsFavorite;
             product.SortOrder = editedProduct.SortOrder;
+        }
+
+        if (metadata.Key == "wifi")
+        {
+            var staticIpPercent = Math.Clamp(model.WifiStaticIpPercent, 0m, 100m);
+            await SaveSetting("WifiStaticIpPercent", staticIpPercent.ToString("0.####", CultureInfo.InvariantCulture));
         }
 
         await _dbContext.SaveChangesAsync();
@@ -165,6 +172,7 @@ public class AdminController : Controller
             Price = "0.00",
             PriceRu = "0.00",
             PriceAz = "0.00",
+            Currency = "AZN",
             Period = string.Empty,
             Description = string.Empty,
             DescriptionRu = string.Empty,
@@ -185,6 +193,116 @@ public class AdminController : Controller
         return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
     }
 
+    public async Task<IActionResult> Purchases(string? search)
+    {
+        var normalizedSearch = search?.Trim() ?? string.Empty;
+        var query = _dbContext.ProductPurchases
+            .AsNoTracking()
+            .Include(item => item.User)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            query = query.Where(item =>
+                item.ProductName.Contains(normalizedSearch) ||
+                item.Category.Contains(normalizedSearch) ||
+                (item.User != null && (item.User.Name.Contains(normalizedSearch) || item.User.Fin.Contains(normalizedSearch))));
+        }
+
+        var purchases = await query
+            .OrderByDescending(item => item.CreatedAtUtc)
+            .Take(200)
+            .Select(item => new AdminPurchaseRowViewModel
+            {
+                Id = item.Id,
+                UserName = item.User != null ? item.User.Name : string.Empty,
+                UserFin = item.User != null ? item.User.Fin : string.Empty,
+                Category = item.Category,
+                ProductName = item.ProductName,
+                ProductCurrency = item.ProductCurrency,
+                ProductAmount = item.ProductAmount,
+                TotalAzn = item.TotalAzn,
+                ExchangeRate = item.ExchangeRate,
+                CommissionRate = item.CommissionRate,
+                HasStaticIp = item.HasStaticIp,
+                StaticIpRate = item.StaticIpRate,
+                StaticIpFeeAzn = item.StaticIpFeeAzn,
+                Status = item.Status,
+                CreatedAtUtc = item.CreatedAtUtc
+            })
+            .ToListAsync();
+
+        return View(new AdminPurchasesViewModel
+        {
+            SearchQuery = normalizedSearch,
+            Purchases = purchases
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelPurchase(int id, string? search)
+    {
+        var purchase = await _dbContext.ProductPurchases
+            .Include(item => item.User)
+            .ThenInclude(item => item!.UserAssets)
+            .FirstOrDefaultAsync(item => item.Id == id);
+
+        if (purchase is not null && purchase.Status == "Active")
+        {
+            purchase.Status = "Cancelled";
+            purchase.CancelledAtUtc = DateTime.UtcNow;
+            purchase.AdminNote = "Cancelled by admin.";
+            await RefreshUserAsset(purchase.User, purchase.Category, purchase.Id);
+
+            _dbContext.PaymentReceipts.Add(BuildAdminReceipt(purchase, "Cancel", "Cancelled", 0m));
+            await _dbContext.SaveChangesAsync();
+            TempData["AdminMessage"] = "Purchase cancelled.";
+        }
+
+        return RedirectToAction(nameof(Purchases), new { search });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RefundPurchase(int id, string? search)
+    {
+        var purchase = await _dbContext.ProductPurchases
+            .Include(item => item.User)
+            .ThenInclude(item => item!.Account)
+            .Include(item => item.User)
+            .ThenInclude(item => item!.UserAssets)
+            .FirstOrDefaultAsync(item => item.Id == id);
+
+        if (purchase?.User is not null && purchase.Status != "Refunded")
+        {
+            purchase.Status = "Refunded";
+            purchase.RefundedAtUtc = DateTime.UtcNow;
+            purchase.CancelledAtUtc ??= DateTime.UtcNow;
+            purchase.AdminNote = "Refunded by admin.";
+            purchase.User.Account.BalanceAzn += purchase.TotalAzn;
+
+            _dbContext.WalletTransactions.Add(new WalletTransaction
+            {
+                UserId = purchase.UserId,
+                ProductPurchaseId = purchase.Id,
+                Type = "Refund",
+                Status = "Paid",
+                AmountAzn = purchase.TotalAzn,
+                BalanceAfterAzn = purchase.User.Account.BalanceAzn,
+                Description = purchase.ProductName,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            await RefreshUserAsset(purchase.User, purchase.Category, purchase.Id);
+            _dbContext.PaymentReceipts.Add(BuildAdminReceipt(purchase, "Refund", "Refunded", purchase.TotalAzn));
+            await _dbContext.SaveChangesAsync();
+            TempData["AdminMessage"] = "Purchase refunded.";
+        }
+
+        return RedirectToAction(nameof(Purchases), new { search });
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteProduct(int id, string category)
@@ -200,6 +318,14 @@ public class AdminController : Controller
 
         if (product is not null)
         {
+            var hasPurchases = await _dbContext.ProductPurchases.AnyAsync(item => item.ProductId == product.Id);
+
+            if (hasPurchases)
+            {
+                TempData["AdminError"] = "Products with purchase history cannot be deleted.";
+                return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
+            }
+
             _dbContext.Products.Remove(product);
             await _dbContext.SaveChangesAsync();
             TempData["AdminMessage"] = "Product deleted.";
@@ -522,6 +648,7 @@ public class AdminController : Controller
                 Price = product.Price,
                 PriceRu = product.PriceRu,
                 PriceAz = product.PriceAz,
+                Currency = product.Currency,
                 Period = product.Period,
                 PeriodRu = product.PeriodRu,
                 PeriodAz = product.PeriodAz,
@@ -573,10 +700,116 @@ public class AdminController : Controller
         };
     }
 
+    private async Task<AdminProductEditorViewModel> BuildProductEditorWithSettings(ProductCategoryMetadata metadata, List<AdminProductItemViewModel> products)
+    {
+        var model = BuildProductEditor(metadata, products);
+
+        if (metadata.Key == "wifi")
+        {
+            model.WifiStaticIpPercent = await GetDecimalSetting("WifiStaticIpPercent", 5m);
+        }
+
+        return model;
+    }
+
+    private async Task<decimal> GetDecimalSetting(string key, decimal fallback)
+    {
+        var value = await _dbContext.AppSettings
+            .AsNoTracking()
+            .Where(setting => setting.Key == key)
+            .Select(setting => setting.Value)
+            .FirstOrDefaultAsync();
+
+        return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : fallback;
+    }
+
+    private async Task SaveSetting(string key, string value)
+    {
+        var setting = await _dbContext.AppSettings.FirstOrDefaultAsync(item => item.Key == key);
+
+        if (setting is null)
+        {
+            _dbContext.AppSettings.Add(new AppSetting { Key = key, Value = value });
+            return;
+        }
+
+        setting.Value = value;
+    }
+
     private static string NormalizeLines(string? value)
     {
         return string.Join('\n', (value ?? string.Empty)
             .Split(["\r\n", "\n"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    }
+
+    private static string NormalizeCurrency(string? currency)
+    {
+        return string.Equals(currency?.Trim(), "USD", StringComparison.OrdinalIgnoreCase) ? "USD" : "AZN";
+    }
+
+    private static string NormalizePrice(string? price)
+    {
+        return (price ?? string.Empty)
+            .Replace("$", string.Empty)
+            .Replace("USD", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace("AZN", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Trim();
+    }
+
+    private async Task RefreshUserAsset(AppUser? user, string category, int ignoredPurchaseId)
+    {
+        if (user?.UserAssets is null)
+        {
+            return;
+        }
+
+        var replacement = await _dbContext.ProductPurchases
+            .AsNoTracking()
+            .Where(item => item.UserId == user.Id && item.Category == category && item.Id != ignoredPurchaseId && item.Status == "Active")
+            .OrderByDescending(item => item.CreatedAtUtc)
+            .FirstOrDefaultAsync();
+
+        var value = replacement?.ProductName;
+
+        switch (category)
+        {
+            case "esim":
+                user.UserAssets.BasicNumber = value;
+                break;
+            case "pass":
+                user.UserAssets.Pass = value;
+                break;
+            case "tariffs":
+                user.UserAssets.BasicTariff = value;
+                break;
+            case "global":
+                user.UserAssets.GlobalTariff = value;
+                break;
+            case "wifi":
+                user.UserAssets.WiFi = value;
+                break;
+        }
+    }
+
+    private static PaymentReceipt BuildAdminReceipt(ProductPurchase purchase, string type, string status, decimal amountAzn)
+    {
+        return new PaymentReceipt
+        {
+            UserId = purchase.UserId,
+            ProductPurchaseId = purchase.Id,
+            ReceiptNumber = $"ES-{DateTime.UtcNow:yyyyMMddHHmmss}-{RandomNumberGenerator.GetInt32(1000, 9999)}",
+            Type = type,
+            Status = status,
+            Currency = "AZN",
+            OriginalAmount = amountAzn,
+            AmountAzn = amountAzn,
+            CommissionRate = 0m,
+            Description = purchase.ProductName,
+            PayloadJson = JsonSerializer.Serialize(new { purchase.Id, purchase.ProductName, purchase.Category, amountAzn }),
+            CreatedAtUtc = DateTime.UtcNow
+        };
     }
 
     private static string NormalizeSliderLanguage(string? language)

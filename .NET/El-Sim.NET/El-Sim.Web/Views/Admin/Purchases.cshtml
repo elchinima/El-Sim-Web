@@ -1,0 +1,99 @@
+@model AdminPurchasesViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Purchases - El-Sim Admin";
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-purchases-title">
+    <div>
+      <p class="eyebrow">orders</p>
+      <h1 id="admin-purchases-title">Purchases</h1>
+      <p>Review user purchases, cancel active products, and return funds to user balance.</p>
+    </div>
+    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+  </section>
+
+  @if (TempData["AdminMessage"] is string adminMessage)
+  {
+    <div class="admin-message">@adminMessage</div>
+  }
+
+  <section class="admin-panel" aria-label="Purchase management">
+    <div class="admin-panel-head">
+      <div>
+        <p class="eyebrow">purchase history</p>
+        <h2>All purchases</h2>
+      </div>
+      <span>@Model.Purchases.Count records</span>
+    </div>
+
+    <form class="admin-search" method="get" asp-action="Purchases">
+      <div class="field">
+        <label for="admin-purchase-search">Search purchase</label>
+        <input id="admin-purchase-search" name="search" value="@Model.SearchQuery" placeholder="User, FIN, category or product">
+      </div>
+      <button class="button button-primary" type="submit">Search</button>
+      @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+      {
+        <a class="button button-secondary" href="/admin/purchases">Clear</a>
+      }
+    </form>
+
+    <div class="admin-users">
+      @foreach (var purchase in Model.Purchases)
+      {
+        <article class="admin-user-card">
+          <div class="admin-user-main">
+            <div>
+              <h3>@purchase.ProductName</h3>
+              <p>@purchase.Category | @purchase.ProductAmount.ToString("F2", CultureInfo.InvariantCulture) @purchase.ProductCurrency | @purchase.TotalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</p>
+              <p>@purchase.UserName | @purchase.UserFin | @purchase.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yy HH:mm", CultureInfo.InvariantCulture)</p>
+              @if (purchase.ExchangeRate.HasValue)
+              {
+                <p>USD @purchase.ExchangeRate.Value.ToString("F4", CultureInfo.InvariantCulture) + @((purchase.CommissionRate * 100m).ToString("F0", CultureInfo.InvariantCulture))%</p>
+              }
+              @if (purchase.HasStaticIp)
+              {
+                <p>Static IP +@((purchase.StaticIpRate * 100m).ToString("0.##", CultureInfo.InvariantCulture))% | @purchase.StaticIpFeeAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</p>
+              }
+            </div>
+          </div>
+
+          <div class="admin-flags">
+            <span class="@(purchase.Status == "Active" ? "is-on" : purchase.Status == "Refunded" ? "is-danger" : "")">@purchase.Status</span>
+          </div>
+
+          <div class="admin-actions">
+            @if (purchase.Status == "Active")
+            {
+              <form id="admin-cancel-purchase-@purchase.Id" method="post" asp-action="CancelPurchase" asp-route-id="@purchase.Id" asp-route-search="@Model.SearchQuery">
+                @Html.AntiForgeryToken()
+                <button class="button button-secondary" type="button" data-open-confirm-form="admin-cancel-purchase-@purchase.Id" data-confirm-title="Cancel purchase" data-confirm-message="Cancel this purchase without refund?" data-confirm-button="Cancel purchase">Cancel</button>
+              </form>
+            }
+            @if (purchase.Status != "Refunded")
+            {
+              <form id="admin-refund-purchase-@purchase.Id" method="post" asp-action="RefundPurchase" asp-route-id="@purchase.Id" asp-route-search="@Model.SearchQuery">
+                @Html.AntiForgeryToken()
+                <button class="button button-danger" type="button" data-open-confirm-form="admin-refund-purchase-@purchase.Id" data-confirm-title="Refund purchase" data-confirm-message="Refund this purchase to the user balance?" data-confirm-button="Refund">Refund</button>
+              </form>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  </section>
+
+  <dialog class="profile-confirm-modal admin-confirm-modal" data-confirm-modal>
+    <form method="dialog" class="profile-confirm-box">
+      <h2 data-confirm-title>Confirm action?</h2>
+      <p data-confirm-text></p>
+      <div class="profile-confirm-actions">
+        <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel>Cancel</button>
+        <button class="button button-primary" type="button" value="confirm" data-confirm-submit>Confirm</button>
+      </div>
+    </form>
+  </dialog>
+</main>

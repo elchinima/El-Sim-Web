@@ -13,4 +13,7 @@ public class AppUser
     public Account Account { get; set; } = new();
     public UserAssets? UserAssets { get; set; }
     public ICollection<TwoFactorCode> TwoFactorCodes { get; set; } = new List<TwoFactorCode>();
+    public ICollection<ProductPurchase> ProductPurchases { get; set; } = new List<ProductPurchase>();
+    public ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
+    public ICollection<PaymentReceipt> PaymentReceipts { get; set; } = new List<PaymentReceipt>();
 }

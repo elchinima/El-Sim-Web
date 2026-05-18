@@ -92,6 +92,19 @@
       <span>Created</span>
       <strong>@Model.CreatedDate</strong>
     </div>
+    <div class="profile-row">
+      <span>Balance</span>
+      <strong>@Model.BalanceAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</strong>
+    </div>
+
+    <form class="profile-form wallet-topup-form" method="post" asp-action="TopUpBalance" data-confirm-message="Top up balance?" data-confirm-button="Pay">
+      @Html.AntiForgeryToken()
+      <div class="field">
+        <label for="topup-amount">Top-up amount, AZN</label>
+        <input id="topup-amount" name="AmountAzn" type="number" min="1" step="0.01" value="10.00" required>
+      </div>
+      <button class="button button-primary" type="submit">Top up</button>
+    </form>
 
     @if (Model.UserAssets?.HasAnyValue == true)
     {
@@ -139,6 +152,34 @@
           </div>
         }
       </div>
+    }
+
+    @if (Model.Purchases.Count > 0)
+    {
+      <section class="profile-assets" aria-label="Purchases">
+        <h2>Purchases</h2>
+        @foreach (var purchase in Model.Purchases)
+        {
+          <div class="profile-row">
+            <span>@purchase.Category | @purchase.Status</span>
+            <strong>@purchase.ProductName - @purchase.TotalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</strong>
+          </div>
+        }
+      </section>
+    }
+
+    @if (Model.Receipts.Count > 0)
+    {
+      <section class="profile-assets" aria-label="Receipts">
+        <h2>Receipts</h2>
+        @foreach (var receipt in Model.Receipts)
+        {
+          <div class="profile-row">
+            <span>@receipt.ReceiptNumber | @receipt.Type | @receipt.Status</span>
+            <strong>@receipt.AmountAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</strong>
+          </div>
+        }
+      </section>
     }
 
     <div class="profile-actions">

@@ -6,17 +6,26 @@ namespace El_Sim.Web.Controllers
         private readonly ProfileImageProcessor _profileImageProcessor;
         private readonly EmailSender _emailSender;
         private readonly IWebHostEnvironment _environment;
+        private readonly ExchangeRateService _exchangeRateService;
+        private readonly ProductPricingService _productPricingService;
+        private readonly StripePaymentService _stripePaymentService;
 
         public HomeController(
             ElSimDbContext dbContext,
             ProfileImageProcessor profileImageProcessor,
             EmailSender emailSender,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            ExchangeRateService exchangeRateService,
+            ProductPricingService productPricingService,
+            StripePaymentService stripePaymentService)
         {
             _dbContext = dbContext;
             _profileImageProcessor = profileImageProcessor;
             _emailSender = emailSender;
             _environment = environment;
+            _exchangeRateService = exchangeRateService;
+            _productPricingService = productPricingService;
+            _stripePaymentService = stripePaymentService;
         }
 
         public async Task<IActionResult> Index()
@@ -25,28 +34,29 @@ namespace El_Sim.Web.Controllers
             {
                 EsimProducts = await GetProducts("esim"),
                 DesktopSliders = await GetSliders(false),
-                MobileSliders = await GetSliders(true)
+                MobileSliders = await GetSliders(true),
+                ExchangeRate = await _exchangeRateService.GetUsdToAznAsync(HttpContext.RequestAborted)
             });
         }
 
         public async Task<IActionResult> Plans()
         {
-            return View(BuildCategoryPage("tariffs", await GetProducts("tariffs")));
+            return View(await BuildCategoryPageWithRate("tariffs", await GetProducts("tariffs")));
         }
 
         public async Task<IActionResult> Pass()
         {
-            return View(BuildCategoryPage("pass", await GetProducts("pass")));
+            return View(await BuildCategoryPageWithRate("pass", await GetProducts("pass")));
         }
 
         public async Task<IActionResult> Global()
         {
-            return View(BuildCategoryPage("global", await GetProducts("global")));
+            return View(await BuildCategoryPageWithRate("global", await GetProducts("global")));
         }
 
         public async Task<IActionResult> Wifi()
         {
-            return View(BuildCategoryPage("wifi", await GetProducts("wifi")));
+            return View(await BuildCategoryPageWithRate("wifi", await GetProducts("wifi")));
         }
 
         public IActionResult Login()
@@ -181,7 +191,10 @@ namespace El_Sim.Web.Controllers
                 CreatedDate = user.CreatedDate.ToString("dd.MM.yy", CultureInfo.InvariantCulture),
                 Email = user.Account.Email ?? string.Empty,
                 ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
+                BalanceAzn = user.Account.BalanceAzn,
                 UserAssets = ToUserAssetsViewModel(user.UserAssets),
+                Purchases = await GetUserPurchases(user.Id),
+                Receipts = await GetUserReceipts(user.Id),
                 IsTwoFactorEnabled = user.Account.IsTwoFactorEnabled,
                 IsEmailNotificationsEnabled = user.Account.IsEmailNotificationsEnabled
             });
@@ -213,7 +226,10 @@ namespace El_Sim.Web.Controllers
                     CreatedDate = user.CreatedDate.ToString("dd.MM.yy", CultureInfo.InvariantCulture),
                     Email = profile.Email ?? string.Empty,
                     ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
+                    BalanceAzn = user.Account.BalanceAzn,
                     UserAssets = ToUserAssetsViewModel(user.UserAssets),
+                    Purchases = await GetUserPurchases(user.Id),
+                    Receipts = await GetUserReceipts(user.Id),
                     IsTwoFactorEnabled = profile.IsTwoFactorEnabled,
                     IsEmailNotificationsEnabled = profile.IsEmailNotificationsEnabled
                 });
@@ -226,6 +242,218 @@ namespace El_Sim.Web.Controllers
 
             await _dbContext.SaveChangesAsync();
             await SignInUser(user, true);
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TopUpBalance(TopUpBalanceViewModel topUp)
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (!ModelState.IsValid || topUp.AmountAzn < 1m)
+            {
+                TempData["ProfileError"] = "Enter a valid top-up amount.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var amount = decimal.Round(topUp.AmountAzn, 2, MidpointRounding.AwayFromZero);
+            var session = await _stripePaymentService.CreateBalanceTopUpSessionAsync(user, amount, Request, HttpContext.RequestAborted);
+
+            _dbContext.WalletTransactions.Add(new WalletTransaction
+            {
+                UserId = user.Id,
+                Type = "TopUp",
+                Status = "Pending",
+                AmountAzn = amount,
+                BalanceAfterAzn = user.Account.BalanceAzn,
+                StripeSessionId = session.Id,
+                Description = "Balance top-up",
+                CreatedAtUtc = DateTime.UtcNow
+            });
+            await _dbContext.SaveChangesAsync();
+
+            return Redirect(session.Url);
+        }
+
+        [Authorize]
+        public async Task<IActionResult> TopUpSuccess(string session_id)
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            if (string.IsNullOrWhiteSpace(session_id))
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var transaction = await _dbContext.WalletTransactions
+                .Include(item => item.User)
+                .ThenInclude(item => item!.Account)
+                .FirstOrDefaultAsync(item => item.StripeSessionId == session_id && item.UserId == user.Id);
+
+            if (transaction is null)
+            {
+                TempData["ProfileError"] = "Top-up session was not found.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (transaction.Status == "Paid")
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var session = await _stripePaymentService.GetSessionAsync(session_id, HttpContext.RequestAborted);
+
+            if (!string.Equals(session.PaymentStatus, "paid", StringComparison.OrdinalIgnoreCase))
+            {
+                TempData["ProfileError"] = "Payment was not completed.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            user.Account.BalanceAzn += transaction.AmountAzn;
+            transaction.Status = "Paid";
+            transaction.BalanceAfterAzn = user.Account.BalanceAzn;
+
+            _dbContext.PaymentReceipts.Add(BuildReceipt(
+                user.Id,
+                null,
+                transaction.Id,
+                "TopUp",
+                "Paid",
+                "AZN",
+                transaction.AmountAzn,
+                transaction.AmountAzn,
+                null,
+                0m,
+                "Balance top-up",
+                new { transaction.StripeSessionId, transaction.AmountAzn }));
+
+            await _dbContext.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PurchaseProduct(int productId, bool includeStaticIp)
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var product = await _dbContext.Products.FirstOrDefaultAsync(item => item.Id == productId);
+
+            if (product is null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var calculation = await _productPricingService.CalculateAsync(product, _exchangeRateService, HttpContext.RequestAborted);
+            var staticIpRate = product.Category == "wifi" && includeStaticIp
+                ? await GetDecimalSetting("WifiStaticIpPercent", 5m) / 100m
+                : 0m;
+            var staticIpFeeAzn = decimal.Round(calculation.TotalAzn * staticIpRate, 2, MidpointRounding.AwayFromZero);
+            var totalAzn = calculation.TotalAzn + staticIpFeeAzn;
+
+            if (user.Account.BalanceAzn < totalAzn)
+            {
+                TempData["ProfileError"] = "Not enough balance.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var oldPurchases = await _dbContext.ProductPurchases
+                .Where(item => item.UserId == user.Id && item.Category == product.Category && item.Status == "Active")
+                .ToListAsync();
+
+            foreach (var oldPurchase in oldPurchases)
+            {
+                oldPurchase.Status = "Cancelled";
+                oldPurchase.CancelledAtUtc = DateTime.UtcNow;
+                oldPurchase.AdminNote = "Replaced by a new purchase.";
+            }
+
+            user.Account.BalanceAzn -= totalAzn;
+
+            var purchase = new ProductPurchase
+            {
+                UserId = user.Id,
+                ProductId = product.Id,
+                Category = product.Category,
+                ProductName = includeStaticIp && product.Category == "wifi" ? $"{product.Name} + Static IP" : product.Name,
+                ProductCurrency = calculation.Currency,
+                ProductAmount = calculation.ProductAmount,
+                TotalAzn = totalAzn,
+                ExchangeRate = calculation.ExchangeRate,
+                CommissionRate = calculation.CommissionRate,
+                HasStaticIp = includeStaticIp && product.Category == "wifi",
+                StaticIpRate = staticIpRate,
+                StaticIpFeeAzn = staticIpFeeAzn,
+                Status = "Active",
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            _dbContext.ProductPurchases.Add(purchase);
+            await _dbContext.SaveChangesAsync();
+
+            _dbContext.WalletTransactions.Add(new WalletTransaction
+            {
+                UserId = user.Id,
+                ProductPurchaseId = purchase.Id,
+                Type = "Purchase",
+                Status = "Paid",
+                AmountAzn = -totalAzn,
+                BalanceAfterAzn = user.Account.BalanceAzn,
+                Description = purchase.ProductName,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            ApplyUserAsset(user, product, purchase.HasStaticIp);
+
+            _dbContext.PaymentReceipts.Add(BuildReceipt(
+                user.Id,
+                purchase.Id,
+                null,
+                "Purchase",
+                "Paid",
+                calculation.Currency,
+                calculation.ProductAmount,
+                totalAzn,
+                calculation.ExchangeRate,
+                calculation.CommissionRate,
+                purchase.ProductName,
+                new
+                {
+                    product.Id,
+                    product.Category,
+                    product.Name,
+                    calculation.Currency,
+                    calculation.ProductAmount,
+                    BaseTotalAzn = calculation.TotalAzn,
+                    TotalAzn = totalAzn,
+                    calculation.ExchangeRate,
+                    calculation.CommissionRate,
+                    purchase.HasStaticIp,
+                    purchase.StaticIpRate,
+                    purchase.StaticIpFeeAzn
+                }));
+
+            await _dbContext.SaveChangesAsync();
 
             return RedirectToAction(nameof(Profile));
         }
@@ -487,6 +715,28 @@ namespace El_Sim.Web.Controllers
             };
         }
 
+        private async Task<ProductCategoryPageViewModel> BuildCategoryPageWithRate(string category, List<ProductCardViewModel> products)
+        {
+            var page = BuildCategoryPage(category, products);
+            page.ExchangeRate = await _exchangeRateService.GetUsdToAznAsync(HttpContext.RequestAborted);
+            page.WifiStaticIpPercent = await GetDecimalSetting("WifiStaticIpPercent", 5m);
+
+            return page;
+        }
+
+        private async Task<decimal> GetDecimalSetting(string key, decimal fallback)
+        {
+            var value = await _dbContext.AppSettings
+                .AsNoTracking()
+                .Where(setting => setting.Key == key)
+                .Select(setting => setting.Value)
+                .FirstOrDefaultAsync();
+
+            return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : fallback;
+        }
+
         private static ProductCardViewModel ToProductCard(Product product)
         {
             return new ProductCardViewModel
@@ -499,6 +749,11 @@ namespace El_Sim.Web.Controllers
                 Price = product.Price,
                 PriceRu = product.PriceRu,
                 PriceAz = product.PriceAz,
+                Currency = ProductPricingService.NormalizeCurrency(product.Currency, product.Price),
+                Amount = ProductPricingService.ParseAmount(product.Price),
+                TotalAzn = ProductPricingService.NormalizeCurrency(product.Currency, product.Price) == "AZN"
+                    ? ProductPricingService.ParseAmount(product.Price)
+                    : 0m,
                 Period = product.Period,
                 PeriodRu = product.PeriodRu,
                 PeriodAz = product.PeriodAz,
@@ -542,6 +797,100 @@ namespace El_Sim.Web.Controllers
             };
 
             return viewModel.HasAnyValue ? viewModel : null;
+        }
+
+        private async Task<List<UserPurchaseViewModel>> GetUserPurchases(int userId)
+        {
+            return await _dbContext.ProductPurchases
+                .AsNoTracking()
+                .Where(item => item.UserId == userId)
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .Take(12)
+                .Select(item => new UserPurchaseViewModel
+                {
+                    Category = item.Category,
+                    ProductName = item.ProductName,
+                    Status = item.Status,
+                    TotalAzn = item.TotalAzn,
+                    CreatedAtUtc = item.CreatedAtUtc
+                })
+                .ToListAsync();
+        }
+
+        private async Task<List<UserReceiptViewModel>> GetUserReceipts(int userId)
+        {
+            return await _dbContext.PaymentReceipts
+                .AsNoTracking()
+                .Where(item => item.UserId == userId)
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .Take(12)
+                .Select(item => new UserReceiptViewModel
+                {
+                    ReceiptNumber = item.ReceiptNumber,
+                    Type = item.Type,
+                    Status = item.Status,
+                    AmountAzn = item.AmountAzn,
+                    CreatedAtUtc = item.CreatedAtUtc
+                })
+                .ToListAsync();
+        }
+
+        private static PaymentReceipt BuildReceipt(
+            int userId,
+            int? purchaseId,
+            int? transactionId,
+            string type,
+            string status,
+            string currency,
+            decimal originalAmount,
+            decimal amountAzn,
+            decimal? exchangeRate,
+            decimal commissionRate,
+            string description,
+            object payload)
+        {
+            return new PaymentReceipt
+            {
+                UserId = userId,
+                ProductPurchaseId = purchaseId,
+                WalletTransactionId = transactionId,
+                ReceiptNumber = $"ES-{DateTime.UtcNow:yyyyMMddHHmmss}-{RandomNumberGenerator.GetInt32(1000, 9999)}",
+                Type = type,
+                Status = status,
+                Currency = currency,
+                OriginalAmount = originalAmount,
+                AmountAzn = amountAzn,
+                ExchangeRate = exchangeRate,
+                CommissionRate = commissionRate,
+                Description = description,
+                PayloadJson = JsonSerializer.Serialize(payload),
+                CreatedAtUtc = DateTime.UtcNow
+            };
+        }
+
+        private static void ApplyUserAsset(AppUser user, Product product, bool hasStaticIp)
+        {
+            user.UserAssets ??= new UserAssets();
+            var productName = hasStaticIp ? $"{product.Name} + Static IP" : product.Name;
+
+            switch (product.Category)
+            {
+                case "esim":
+                    user.UserAssets.BasicNumber = productName;
+                    break;
+                case "pass":
+                    user.UserAssets.Pass = productName;
+                    break;
+                case "tariffs":
+                    user.UserAssets.BasicTariff = productName;
+                    break;
+                case "global":
+                    user.UserAssets.GlobalTariff = productName;
+                    break;
+                case "wifi":
+                    user.UserAssets.WiFi = productName;
+                    break;
+            }
         }
 
         private async Task SendTwoFactorCode(AppUser user, bool rememberMe)

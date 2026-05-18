@@ -12,6 +12,10 @@ public class ElSimDbContext : DbContext
     public DbSet<Product> Products => Set<Product>();
     public DbSet<HomeSlider> HomeSliders => Set<HomeSlider>();
     public DbSet<UserAssets> UserAssets => Set<UserAssets>();
+    public DbSet<ProductPurchase> ProductPurchases => Set<ProductPurchase>();
+    public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
+    public DbSet<PaymentReceipt> PaymentReceipts => Set<PaymentReceipt>();
+    public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -61,6 +65,7 @@ public class ElSimDbContext : DbContext
             entity.Property(account => account.Id).ValueGeneratedOnAdd();
             entity.Property(account => account.Email).HasMaxLength(254);
             entity.Property(account => account.ProfileImagePath).HasMaxLength(260);
+            entity.Property(account => account.BalanceAzn).HasColumnType("decimal(18,2)").HasDefaultValue(0m);
             entity.Property(account => account.IsAdmin).HasDefaultValue(false);
             entity.Property(account => account.IsBlocked).HasDefaultValue(false);
             entity.Property(account => account.IsTwoFactorEnabled).HasDefaultValue(false);
@@ -94,6 +99,7 @@ public class ElSimDbContext : DbContext
             entity.Property(product => product.Price).HasMaxLength(40).IsRequired();
             entity.Property(product => product.PriceRu).HasMaxLength(40);
             entity.Property(product => product.PriceAz).HasMaxLength(40);
+            entity.Property(product => product.Currency).HasMaxLength(3).HasDefaultValue("AZN").IsRequired();
             entity.Property(product => product.Period).HasMaxLength(40);
             entity.Property(product => product.PeriodRu).HasMaxLength(40);
             entity.Property(product => product.PeriodAz).HasMaxLength(40);
@@ -111,6 +117,102 @@ public class ElSimDbContext : DbContext
             entity.Property(product => product.IsFavorite).HasDefaultValue(false);
             entity.Property(product => product.SortOrder).IsRequired();
             entity.HasIndex(product => new { product.Category, product.SortOrder });
+        });
+
+        modelBuilder.Entity<ProductPurchase>(entity =>
+        {
+            entity.ToTable("ProductPurchases");
+            entity.HasKey(purchase => purchase.Id);
+            entity.Property(purchase => purchase.Id).ValueGeneratedOnAdd();
+            entity.Property(purchase => purchase.Category).HasMaxLength(32).IsRequired();
+            entity.Property(purchase => purchase.ProductName).HasMaxLength(80).IsRequired();
+            entity.Property(purchase => purchase.ProductCurrency).HasMaxLength(3).IsRequired();
+            entity.Property(purchase => purchase.ProductAmount).HasColumnType("decimal(18,2)");
+            entity.Property(purchase => purchase.TotalAzn).HasColumnType("decimal(18,2)");
+            entity.Property(purchase => purchase.ExchangeRate).HasColumnType("decimal(18,6)");
+            entity.Property(purchase => purchase.CommissionRate).HasColumnType("decimal(8,4)");
+            entity.Property(purchase => purchase.HasStaticIp).HasDefaultValue(false);
+            entity.Property(purchase => purchase.StaticIpRate).HasColumnType("decimal(8,4)");
+            entity.Property(purchase => purchase.StaticIpFeeAzn).HasColumnType("decimal(18,2)");
+            entity.Property(purchase => purchase.Status).HasMaxLength(24).IsRequired();
+            entity.Property(purchase => purchase.CreatedAtUtc).IsRequired();
+            entity.Property(purchase => purchase.AdminNote).HasMaxLength(260);
+            entity.HasOne(purchase => purchase.User)
+                .WithMany(user => user.ProductPurchases)
+                .HasForeignKey(purchase => purchase.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(purchase => purchase.Product)
+                .WithMany(product => product.Purchases)
+                .HasForeignKey(purchase => purchase.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(purchase => new { purchase.UserId, purchase.Category, purchase.Status });
+        });
+
+        modelBuilder.Entity<WalletTransaction>(entity =>
+        {
+            entity.ToTable("WalletTransactions");
+            entity.HasKey(transaction => transaction.Id);
+            entity.Property(transaction => transaction.Id).ValueGeneratedOnAdd();
+            entity.Property(transaction => transaction.Type).HasMaxLength(24).IsRequired();
+            entity.Property(transaction => transaction.Status).HasMaxLength(24).IsRequired();
+            entity.Property(transaction => transaction.AmountAzn).HasColumnType("decimal(18,2)");
+            entity.Property(transaction => transaction.BalanceAfterAzn).HasColumnType("decimal(18,2)");
+            entity.Property(transaction => transaction.StripeSessionId).HasMaxLength(128);
+            entity.Property(transaction => transaction.Description).HasMaxLength(260).IsRequired();
+            entity.Property(transaction => transaction.CreatedAtUtc).IsRequired();
+            entity.HasOne(transaction => transaction.User)
+                .WithMany(user => user.WalletTransactions)
+                .HasForeignKey(transaction => transaction.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(transaction => transaction.ProductPurchase)
+                .WithMany()
+                .HasForeignKey(transaction => transaction.ProductPurchaseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(transaction => transaction.StripeSessionId).IsUnique()
+                .HasFilter("[StripeSessionId] IS NOT NULL");
+            entity.HasIndex(transaction => new { transaction.UserId, transaction.CreatedAtUtc });
+        });
+
+        modelBuilder.Entity<PaymentReceipt>(entity =>
+        {
+            entity.ToTable("PaymentReceipts");
+            entity.HasKey(receipt => receipt.Id);
+            entity.Property(receipt => receipt.Id).ValueGeneratedOnAdd();
+            entity.Property(receipt => receipt.ReceiptNumber).HasMaxLength(40).IsRequired();
+            entity.Property(receipt => receipt.Type).HasMaxLength(24).IsRequired();
+            entity.Property(receipt => receipt.Status).HasMaxLength(24).IsRequired();
+            entity.Property(receipt => receipt.Currency).HasMaxLength(3).IsRequired();
+            entity.Property(receipt => receipt.OriginalAmount).HasColumnType("decimal(18,2)");
+            entity.Property(receipt => receipt.AmountAzn).HasColumnType("decimal(18,2)");
+            entity.Property(receipt => receipt.ExchangeRate).HasColumnType("decimal(18,6)");
+            entity.Property(receipt => receipt.CommissionRate).HasColumnType("decimal(8,4)");
+            entity.Property(receipt => receipt.Description).HasMaxLength(260).IsRequired();
+            entity.Property(receipt => receipt.PayloadJson).IsRequired();
+            entity.Property(receipt => receipt.CreatedAtUtc).IsRequired();
+            entity.HasOne(receipt => receipt.User)
+                .WithMany(user => user.PaymentReceipts)
+                .HasForeignKey(receipt => receipt.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(receipt => receipt.ProductPurchase)
+                .WithMany(purchase => purchase.Receipts)
+                .HasForeignKey(receipt => receipt.ProductPurchaseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(receipt => receipt.WalletTransaction)
+                .WithMany(transaction => transaction.Receipts)
+                .HasForeignKey(receipt => receipt.WalletTransactionId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(receipt => receipt.ReceiptNumber).IsUnique();
+            entity.HasIndex(receipt => new { receipt.UserId, receipt.CreatedAtUtc });
+        });
+
+        modelBuilder.Entity<AppSetting>(entity =>
+        {
+            entity.ToTable("AppSettings");
+            entity.HasKey(setting => setting.Id);
+            entity.Property(setting => setting.Id).ValueGeneratedOnAdd();
+            entity.Property(setting => setting.Key).HasMaxLength(80).IsRequired();
+            entity.Property(setting => setting.Value).HasMaxLength(260).IsRequired();
+            entity.HasIndex(setting => setting.Key).IsUnique();
         });
 
         modelBuilder.Entity<HomeSlider>(entity =>

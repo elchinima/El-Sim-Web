@@ -149,6 +149,12 @@
       <div class="plans-grid">
         @foreach (var product in Model.EsimProducts)
         {
+          var totalAzn = product.Currency == "USD" && Model.ExchangeRate is not null
+            ? decimal.Round(product.Amount * Model.ExchangeRate.UsdToAzn * 1.03m, 2, MidpointRounding.AwayFromZero)
+            : product.TotalAzn;
+          var confirmMessage = product.Currency == "USD" && Model.ExchangeRate is not null
+            ? $"Buy {product.Name} for {totalAzn:F2} AZN? USD rate: {Model.ExchangeRate.UsdToAzn:F4}, conversion commission: 3%."
+            : $"Buy {product.Name} for {product.DisplayPrice}?";
           <article class="pass-card esim-card @(product.IsFeatured ? "is-featured" : "")">
             @if (product.IsFavorite)
             {
@@ -158,7 +164,11 @@
               <h2 data-product-i18n data-lang-en="@product.Name" data-lang-ru="@(string.IsNullOrWhiteSpace(product.NameRu) ? product.Name : product.NameRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.NameAz) ? product.Name : product.NameAz)">@product.Name</h2>
               @if (!string.IsNullOrWhiteSpace(product.Price) || !string.IsNullOrWhiteSpace(product.Period))
               {
-                <p class="pass-price">@if (!string.IsNullOrWhiteSpace(product.Price)) { <span data-product-i18n data-lang-en="@product.Price" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PriceRu) ? product.Price : product.PriceRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PriceAz) ? product.Price : product.PriceAz)">@product.Price</span> } @if (!string.IsNullOrWhiteSpace(product.Price) && !string.IsNullOrWhiteSpace(product.Period)) { <span>| </span> } @if (!string.IsNullOrWhiteSpace(product.Period)) { <span data-product-i18n data-lang-en="@product.Period" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PeriodRu) ? product.Period : product.PeriodRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PeriodAz) ? product.Period : product.PeriodAz)">@product.Period</span> }</p>
+                <p class="pass-price">@if (!string.IsNullOrWhiteSpace(product.Price)) { <span data-product-i18n data-lang-en="@product.DisplayPrice" data-lang-ru="@product.DisplayPriceRu" data-lang-az="@product.DisplayPriceAz">@product.DisplayPrice</span> } @if (!string.IsNullOrWhiteSpace(product.Price) && !string.IsNullOrWhiteSpace(product.Period)) { <span>| </span> } @if (!string.IsNullOrWhiteSpace(product.Period)) { <span data-product-i18n data-lang-en="@product.Period" data-lang-ru="@(string.IsNullOrWhiteSpace(product.PeriodRu) ? product.Period : product.PeriodRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.PeriodAz) ? product.Period : product.PeriodAz)">@product.Period</span> }</p>
+                @if (product.Currency == "USD" && Model.ExchangeRate is not null)
+                {
+                  <p class="conversion-note" data-product-i18n data-lang-en="@($"~ {totalAzn:F2} AZN | USD rate {Model.ExchangeRate.UsdToAzn:F4} + 3% conversion fee")" data-lang-ru="@($"~ {totalAzn:F2} AZN | курс USD {Model.ExchangeRate.UsdToAzn:F4} + комиссия 3%")" data-lang-az="@($"~ {totalAzn:F2} AZN | USD kursu {Model.ExchangeRate.UsdToAzn:F4} + 3% komissiya")">~ @totalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN | USD rate @Model.ExchangeRate.UsdToAzn.ToString("F4", CultureInfo.InvariantCulture) + 3% conversion fee</p>
+                }
               }
             </div>
             @if (product.Features.Count > 0)
@@ -181,7 +191,10 @@
             }
             @if (!string.IsNullOrWhiteSpace(product.ButtonText))
             {
-              <a class="plan-link" href="@(string.IsNullOrWhiteSpace(product.ButtonUrl) ? "#" : product.ButtonUrl)" data-product-i18n data-lang-en="@product.ButtonText" data-lang-ru="@(string.IsNullOrWhiteSpace(product.ButtonTextRu) ? product.ButtonText : product.ButtonTextRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.ButtonTextAz) ? product.ButtonText : product.ButtonTextAz)">@product.ButtonText</a>
+              <form method="post" asp-action="PurchaseProduct" asp-route-productId="@product.Id" data-confirm-message="@confirmMessage" data-confirm-button="Buy">
+                @Html.AntiForgeryToken()
+                <button class="plan-link" type="submit" data-product-i18n data-lang-en="@product.ButtonText" data-lang-ru="@(string.IsNullOrWhiteSpace(product.ButtonTextRu) ? product.ButtonText : product.ButtonTextRu)" data-lang-az="@(string.IsNullOrWhiteSpace(product.ButtonTextAz) ? product.ButtonText : product.ButtonTextAz)">@product.ButtonText</button>
+              </form>
             }
           </article>
         }
