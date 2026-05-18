@@ -6,10 +6,12 @@ public class ElSimDbContext : DbContext
     {
     }
 
+    public DbSet<Account> Accounts => Set<Account>();
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<TwoFactorCode> TwoFactorCodes => Set<TwoFactorCode>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<HomeSlider> HomeSliders => Set<HomeSlider>();
+    public DbSet<UserAssets> UserAssets => Set<UserAssets>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,18 +20,51 @@ public class ElSimDbContext : DbContext
             entity.ToTable("Users");
             entity.HasKey(user => user.Id);
             entity.Property(user => user.Id).ValueGeneratedOnAdd();
+            entity.Property(user => user.AccountId).IsRequired();
+            entity.Property(user => user.UserAssetsId);
             entity.Property(user => user.Name).HasMaxLength(25).IsRequired();
             entity.Property(user => user.Fin).HasMaxLength(7).IsRequired();
             entity.HasIndex(user => user.Fin).IsUnique();
-            entity.Property(user => user.Email).HasMaxLength(254);
-            entity.Property(user => user.ProfileImagePath).HasMaxLength(260);
-            entity.Property(user => user.IsAdmin).HasDefaultValue(false);
-            entity.Property(user => user.IsBlocked).HasDefaultValue(false);
-            entity.Property(user => user.IsTwoFactorEnabled).HasDefaultValue(false);
-            entity.Property(user => user.IsEmailNotificationsEnabled).HasDefaultValue(false);
             entity.Property(user => user.PasswordHash).HasMaxLength(128).IsRequired();
             entity.Property(user => user.PasswordSalt).HasMaxLength(128).IsRequired();
             entity.Property(user => user.CreatedDate).HasColumnType("date").IsRequired();
+            entity.HasOne(user => user.Account)
+                .WithOne(account => account.User)
+                .HasForeignKey<AppUser>(user => user.AccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(user => user.AccountId).IsUnique();
+            entity.HasOne(user => user.UserAssets)
+                .WithOne(userAssets => userAssets.User)
+                .HasForeignKey<AppUser>(user => user.UserAssetsId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(user => user.UserAssetsId).IsUnique()
+                .HasFilter("[UserAssetsId] IS NOT NULL");
+        });
+
+        modelBuilder.Entity<UserAssets>(entity =>
+        {
+            entity.ToTable("UserAssets");
+            entity.HasKey(userAssets => userAssets.Id);
+            entity.Property(userAssets => userAssets.Id).ValueGeneratedOnAdd();
+            entity.Property(userAssets => userAssets.BasicNumber).HasMaxLength(32);
+            entity.Property(userAssets => userAssets.GlobalNumber).HasMaxLength(32);
+            entity.Property(userAssets => userAssets.Pass).HasMaxLength(80);
+            entity.Property(userAssets => userAssets.BasicTariff).HasMaxLength(80);
+            entity.Property(userAssets => userAssets.GlobalTariff).HasMaxLength(80);
+            entity.Property(userAssets => userAssets.WiFi).HasMaxLength(80);
+        });
+
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.ToTable("Account");
+            entity.HasKey(account => account.Id);
+            entity.Property(account => account.Id).ValueGeneratedOnAdd();
+            entity.Property(account => account.Email).HasMaxLength(254);
+            entity.Property(account => account.ProfileImagePath).HasMaxLength(260);
+            entity.Property(account => account.IsAdmin).HasDefaultValue(false);
+            entity.Property(account => account.IsBlocked).HasDefaultValue(false);
+            entity.Property(account => account.IsTwoFactorEnabled).HasDefaultValue(false);
+            entity.Property(account => account.IsEmailNotificationsEnabled).HasDefaultValue(false);
         });
 
         modelBuilder.Entity<TwoFactorCode>(entity =>

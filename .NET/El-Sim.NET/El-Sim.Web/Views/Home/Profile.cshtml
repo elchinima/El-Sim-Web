@@ -93,6 +93,54 @@
       <strong>@Model.CreatedDate</strong>
     </div>
 
+    @if (Model.UserAssets?.HasAnyValue == true)
+    {
+      <div class="profile-assets">
+        @if (!string.IsNullOrWhiteSpace(Model.UserAssets.BasicNumber))
+        {
+          <div class="profile-row">
+            <span>Basic number</span>
+            <strong>@Model.UserAssets.BasicNumber</strong>
+          </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.UserAssets.GlobalNumber))
+        {
+          <div class="profile-row">
+            <span>Global number</span>
+            <strong>@Model.UserAssets.GlobalNumber</strong>
+          </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.UserAssets.Pass))
+        {
+          <div class="profile-row">
+            <span>Pass</span>
+            <strong>@Model.UserAssets.Pass</strong>
+          </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.UserAssets.BasicTariff))
+        {
+          <div class="profile-row">
+            <span>Basic tariff</span>
+            <strong>@Model.UserAssets.BasicTariff</strong>
+          </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.UserAssets.GlobalTariff))
+        {
+          <div class="profile-row">
+            <span>Global tariff</span>
+            <strong>@Model.UserAssets.GlobalTariff</strong>
+          </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.UserAssets.WiFi))
+        {
+          <div class="profile-row">
+            <span>WiFi</span>
+            <strong>@Model.UserAssets.WiFi</strong>
+          </div>
+        }
+      </div>
+    }
+
     <div class="profile-actions">
       <a class="button button-primary" href="/plans">Plans</a>
       <a class="button button-secondary" href="/logout">Logout</a>

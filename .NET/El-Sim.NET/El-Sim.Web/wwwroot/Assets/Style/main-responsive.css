@@ -373,6 +373,10 @@
         text-align: left;
     }
 
+    .profile-assets {
+        grid-template-columns: 1fr;
+    }
+
     .profile-actions {
         grid-template-columns: 1fr;
     }

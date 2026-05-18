@@ -69,7 +69,9 @@ namespace El_Sim.Web.Controllers
             }
 
             login.Fin = login.Fin.Trim().ToUpperInvariant();
-            var user = await _dbContext.Users.FirstOrDefaultAsync(item => item.Fin == login.Fin);
+            var user = await _dbContext.Users
+                .Include(item => item.Account)
+                .FirstOrDefaultAsync(item => item.Fin == login.Fin);
 
             if (user is null || !PasswordHasher.VerifyPassword(login.Password, user.PasswordHash, user.PasswordSalt))
             {
@@ -77,15 +79,15 @@ namespace El_Sim.Web.Controllers
                 return View(new AuthPageViewModel { Login = login, ActiveForm = "login" });
             }
 
-            if (user.IsBlocked)
+            if (user.Account.IsBlocked)
             {
                 ModelState.AddModelError(string.Empty, "Your account is blocked.");
                 return View(new AuthPageViewModel { Login = login, ActiveForm = "login" });
             }
 
-            if (user.IsTwoFactorEnabled)
+            if (user.Account.IsTwoFactorEnabled)
             {
-                if (string.IsNullOrWhiteSpace(user.Email))
+                if (string.IsNullOrWhiteSpace(user.Account.Email))
                 {
                     ModelState.AddModelError(string.Empty, "Email is required for two-factor verification.");
                     return View(new AuthPageViewModel { Login = login, ActiveForm = "login" });
@@ -134,6 +136,7 @@ namespace El_Sim.Web.Controllers
 
             var user = new AppUser
             {
+                Account = new Account(),
                 Name = register.Name.Trim(),
                 Fin = register.Fin,
                 CreatedDate = DateOnly.FromDateTime(DateTime.Today)
@@ -160,7 +163,10 @@ namespace El_Sim.Web.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
-            var user = await _dbContext.Users.FindAsync(userId);
+            var user = await _dbContext.Users
+                .Include(item => item.Account)
+                .Include(item => item.UserAssets)
+                .FirstOrDefaultAsync(item => item.Id == userId);
 
             if (user is null)
             {
@@ -173,10 +179,11 @@ namespace El_Sim.Web.Controllers
                 Name = user.Name,
                 Fin = user.Fin,
                 CreatedDate = user.CreatedDate.ToString("dd.MM.yy", CultureInfo.InvariantCulture),
-                Email = user.Email ?? string.Empty,
-                ProfileImagePath = user.ProfileImagePath ?? string.Empty,
-                IsTwoFactorEnabled = user.IsTwoFactorEnabled,
-                IsEmailNotificationsEnabled = user.IsEmailNotificationsEnabled
+                Email = user.Account.Email ?? string.Empty,
+                ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
+                UserAssets = ToUserAssetsViewModel(user.UserAssets),
+                IsTwoFactorEnabled = user.Account.IsTwoFactorEnabled,
+                IsEmailNotificationsEnabled = user.Account.IsEmailNotificationsEnabled
             });
         }
 
@@ -205,16 +212,17 @@ namespace El_Sim.Web.Controllers
                     Fin = user.Fin,
                     CreatedDate = user.CreatedDate.ToString("dd.MM.yy", CultureInfo.InvariantCulture),
                     Email = profile.Email ?? string.Empty,
-                    ProfileImagePath = user.ProfileImagePath ?? string.Empty,
+                    ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
+                    UserAssets = ToUserAssetsViewModel(user.UserAssets),
                     IsTwoFactorEnabled = profile.IsTwoFactorEnabled,
                     IsEmailNotificationsEnabled = profile.IsEmailNotificationsEnabled
                 });
             }
 
             user.Name = profile.Name.Trim();
-            user.Email = string.IsNullOrWhiteSpace(profile.Email) ? null : profile.Email.Trim();
-            user.IsTwoFactorEnabled = profile.IsTwoFactorEnabled;
-            user.IsEmailNotificationsEnabled = profile.IsEmailNotificationsEnabled;
+            user.Account.Email = string.IsNullOrWhiteSpace(profile.Email) ? null : profile.Email.Trim();
+            user.Account.IsTwoFactorEnabled = profile.IsTwoFactorEnabled;
+            user.Account.IsEmailNotificationsEnabled = profile.IsEmailNotificationsEnabled;
 
             await _dbContext.SaveChangesAsync();
             await SignInUser(user, true);
@@ -271,8 +279,8 @@ namespace El_Sim.Web.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
-            DeleteOldProfileImage(user.ProfileImagePath);
-            user.ProfileImagePath = $"/Uploads/Avatars/{fileName}";
+            DeleteOldProfileImage(user.Account.ProfileImagePath);
+            user.Account.ProfileImagePath = $"/Uploads/Avatars/{fileName}";
             await _dbContext.SaveChangesAsync();
 
             return RedirectToAction(nameof(Profile));
@@ -290,8 +298,8 @@ namespace El_Sim.Web.Controllers
                 return RedirectToAction(nameof(Login));
             }
 
-            DeleteOldProfileImage(user.ProfileImagePath);
-            user.ProfileImagePath = null;
+            DeleteOldProfileImage(user.Account.ProfileImagePath);
+            user.Account.ProfileImagePath = null;
             await _dbContext.SaveChangesAsync();
 
             return RedirectToAction(nameof(Profile));
@@ -317,6 +325,7 @@ namespace El_Sim.Web.Controllers
 
             var code = await _dbContext.TwoFactorCodes
                 .Include(item => item.AppUser)
+                .ThenInclude(item => item!.Account)
                 .FirstOrDefaultAsync(item => item.AppUserId == verification.UserId && item.Code == verification.Code);
 
             if (code is null || code.AppUser is null || code.ExpiresAtUtc <= DateTime.UtcNow)
@@ -404,7 +413,7 @@ namespace El_Sim.Web.Controllers
                 new(ClaimTypes.NameIdentifier, user.Id.ToString(CultureInfo.InvariantCulture)),
                 new(ClaimTypes.Name, user.Name),
                 new("fin", user.Fin),
-                new("is-admin", user.IsAdmin.ToString(CultureInfo.InvariantCulture))
+                new("is-admin", user.Account.IsAdmin.ToString(CultureInfo.InvariantCulture))
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -424,7 +433,12 @@ namespace El_Sim.Web.Controllers
         {
             var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return int.TryParse(id, out var userId) ? await _dbContext.Users.FindAsync(userId) : null;
+            return int.TryParse(id, out var userId)
+                ? await _dbContext.Users
+                    .Include(item => item.Account)
+                    .Include(item => item.UserAssets)
+                    .FirstOrDefaultAsync(item => item.Id == userId)
+                : null;
         }
 
         private async Task<List<ProductCardViewModel>> GetProducts(string category)
@@ -510,6 +524,26 @@ namespace El_Sim.Web.Controllers
             };
         }
 
+        private static UserAssetsViewModel? ToUserAssetsViewModel(UserAssets? userAssets)
+        {
+            if (userAssets is null)
+            {
+                return null;
+            }
+
+            var viewModel = new UserAssetsViewModel
+            {
+                BasicNumber = userAssets.BasicNumber,
+                GlobalNumber = userAssets.GlobalNumber,
+                Pass = userAssets.Pass,
+                BasicTariff = userAssets.BasicTariff,
+                GlobalTariff = userAssets.GlobalTariff,
+                WiFi = userAssets.WiFi
+            };
+
+            return viewModel.HasAnyValue ? viewModel : null;
+        }
+
         private async Task SendTwoFactorCode(AppUser user, bool rememberMe)
         {
             var oldCodes = _dbContext.TwoFactorCodes.Where(item => item.AppUserId == user.Id);
@@ -530,7 +564,7 @@ namespace El_Sim.Web.Controllers
 
             try
             {
-                await _emailSender.SendAsync(user.Email!, "El-Sim verification code", BuildTwoFactorEmail(user.Name, code), true);
+                await _emailSender.SendAsync(user.Account.Email!, "El-Sim verification code", BuildTwoFactorEmail(user.Name, code), true);
             }
             catch
             {

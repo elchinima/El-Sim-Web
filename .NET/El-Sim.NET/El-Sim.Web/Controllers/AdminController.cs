@@ -402,7 +402,9 @@ public class AdminController : Controller
     {
         var currentUser = await GetCurrentUser();
 
-        var user = await _dbContext.Users.FindAsync(id);
+        var user = await _dbContext.Users
+            .Include(item => item.Account)
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (user is null)
         {
@@ -415,7 +417,7 @@ public class AdminController : Controller
             return RedirectToAction(nameof(Users), new { search });
         }
 
-        user.IsBlocked = !user.IsBlocked;
+        user.Account.IsBlocked = !user.Account.IsBlocked;
         await _dbContext.SaveChangesAsync();
 
         return RedirectToAction(nameof(Users), new { search });
@@ -425,16 +427,18 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleTwoFactor(int id, string? search)
     {
-        var user = await _dbContext.Users.FindAsync(id);
+        var user = await _dbContext.Users
+            .Include(item => item.Account)
+            .FirstOrDefaultAsync(item => item.Id == id);
 
         if (user is null)
         {
             return RedirectToAction(nameof(Users), new { search });
         }
 
-        user.IsTwoFactorEnabled = !user.IsTwoFactorEnabled;
+        user.Account.IsTwoFactorEnabled = !user.Account.IsTwoFactorEnabled;
 
-        if (!user.IsTwoFactorEnabled)
+        if (!user.Account.IsTwoFactorEnabled)
         {
             var codes = _dbContext.TwoFactorCodes.Where(code => code.AppUserId == user.Id);
             _dbContext.TwoFactorCodes.RemoveRange(codes);
@@ -456,35 +460,35 @@ public class AdminController : Controller
             userQuery = userQuery.Where(user =>
                 user.Name.Contains(normalizedSearch) ||
                 user.Fin.Contains(normalizedSearch) ||
-                (user.Email != null && user.Email.Contains(normalizedSearch)));
+                (user.Account.Email != null && user.Account.Email.Contains(normalizedSearch)));
         }
 
         var users = await userQuery
-            .OrderByDescending(user => user.IsAdmin)
-            .ThenBy(user => user.IsBlocked)
+            .OrderByDescending(user => user.Account.IsAdmin)
+            .ThenBy(user => user.Account.IsBlocked)
             .ThenByDescending(user => user.Id)
             .Select(user => new AdminUserRowViewModel
             {
                 Id = user.Id,
                 Name = user.Name,
                 Fin = user.Fin,
-                Email = user.Email ?? string.Empty,
+                Email = user.Account.Email ?? string.Empty,
                 CreatedDate = user.CreatedDate.ToString("dd.MM.yy", CultureInfo.InvariantCulture),
-                ProfileImagePath = user.ProfileImagePath ?? string.Empty,
-                IsAdmin = user.IsAdmin,
-                IsBlocked = user.IsBlocked,
-                IsTwoFactorEnabled = user.IsTwoFactorEnabled,
-                IsEmailNotificationsEnabled = user.IsEmailNotificationsEnabled
+                ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
+                IsAdmin = user.Account.IsAdmin,
+                IsBlocked = user.Account.IsBlocked,
+                IsTwoFactorEnabled = user.Account.IsTwoFactorEnabled,
+                IsEmailNotificationsEnabled = user.Account.IsEmailNotificationsEnabled
             })
             .ToListAsync();
 
         return new AdminDashboardViewModel
         {
             TotalUsers = await allUsers.CountAsync(),
-            AdminUsers = await allUsers.CountAsync(user => user.IsAdmin),
-            BlockedUsers = await allUsers.CountAsync(user => user.IsBlocked),
-            TwoFactorUsers = await allUsers.CountAsync(user => user.IsTwoFactorEnabled),
-            EmailNotificationUsers = await allUsers.CountAsync(user => user.IsEmailNotificationsEnabled),
+            AdminUsers = await allUsers.CountAsync(user => user.Account.IsAdmin),
+            BlockedUsers = await allUsers.CountAsync(user => user.Account.IsBlocked),
+            TwoFactorUsers = await allUsers.CountAsync(user => user.Account.IsTwoFactorEnabled),
+            EmailNotificationUsers = await allUsers.CountAsync(user => user.Account.IsEmailNotificationsEnabled),
             PendingTwoFactorCodes = await _dbContext.TwoFactorCodes.CountAsync(code => code.ExpiresAtUtc > DateTime.UtcNow),
             SearchQuery = normalizedSearch,
             Users = users
@@ -495,7 +499,11 @@ public class AdminController : Controller
     {
         var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        return int.TryParse(id, out var userId) ? await _dbContext.Users.FindAsync(userId) : null;
+        return int.TryParse(id, out var userId)
+            ? await _dbContext.Users
+                .Include(item => item.Account)
+                .FirstOrDefaultAsync(item => item.Id == userId)
+            : null;
     }
 
     private async Task<List<AdminProductItemViewModel>> GetAdminProducts(string category)

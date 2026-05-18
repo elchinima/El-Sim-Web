@@ -14,6 +14,7 @@ builder.Services.Configure<EmailOptions>(options =>
 builder.Services.AddScoped<EmailSender>();
 builder.Services.AddScoped<ProfileImageProcessor>();
 builder.Services.AddScoped<SliderImageProcessor>();
+builder.Services.AddScoped<AccountDataInitializer>();
 builder.Services.AddScoped<ProductDataInitializer>();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -30,6 +31,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    await scope.ServiceProvider.GetRequiredService<AccountDataInitializer>().InitializeAsync();
     await scope.ServiceProvider.GetRequiredService<ProductDataInitializer>().InitializeAsync();
 }
 

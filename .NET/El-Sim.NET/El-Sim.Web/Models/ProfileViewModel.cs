@@ -7,6 +7,7 @@ public class ProfileViewModel
     public string CreatedDate { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string ProfileImagePath { get; set; } = string.Empty;
+    public UserAssetsViewModel? UserAssets { get; set; }
     public bool IsTwoFactorEnabled { get; set; }
     public bool IsEmailNotificationsEnabled { get; set; }
 }
