@@ -6,7 +6,10 @@ public class ProductPurchase
     public int UserId { get; set; }
     public int ProductId { get; set; }
     public string Category { get; set; } = string.Empty;
+    public string ProductType { get; set; } = string.Empty;
     public string ProductName { get; set; } = string.Empty;
+    public string PhoneNumber { get; set; } = string.Empty;
+    public string PhonePrefix { get; set; } = string.Empty;
     public string ProductCurrency { get; set; } = "AZN";
     public decimal ProductAmount { get; set; }
     public decimal TotalAzn { get; set; }

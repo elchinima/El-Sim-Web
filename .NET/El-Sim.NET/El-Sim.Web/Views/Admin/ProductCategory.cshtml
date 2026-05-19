@@ -39,6 +39,10 @@
       {
         <article class="admin-product-row">
           <input type="hidden" asp-for="Products[index].Id">
+          @if (Model.Category != "esim")
+          {
+            <input type="hidden" asp-for="Products[index].ProductType">
+          }
           <div>
             <span>EN</span>
             <strong>@Model.Products[index].Name</strong>
@@ -82,6 +86,18 @@
                   <option value="USD">USD</option>
                 </select>
               </div>
+              @if (Model.Category == "esim")
+              {
+                <div class="field">
+                  <label asp-for="Products[index].ProductType">Type</label>
+                  <select asp-for="Products[index].ProductType">
+                    <option value="basic">Regular number</option>
+                    <option value="global">Global</option>
+                    <option value="pass">Pass</option>
+                    <option value="tariff">Tariff</option>
+                  </select>
+                </div>
+              }
               <div class="field admin-field-wide">
                 <label asp-for="Products[index].ButtonUrl">Button URL</label>
                 <input asp-for="Products[index].ButtonUrl">
@@ -197,6 +213,51 @@
             <label asp-for="WifiStaticIpPercent">Static IP percent</label>
             <input asp-for="WifiStaticIpPercent" type="number" min="0" max="100" step="0.01">
           </div>
+        </div>
+      </section>
+    }
+
+    @if (Model.Category == "esim")
+    {
+      <section class="admin-panel wifi-static-ip-settings" aria-label="Number prefix prices">
+        <div class="admin-panel-head">
+          <div>
+            <p class="eyebrow">activation</p>
+            <h2>Number prices</h2>
+          </div>
+          <span>+994 prefixes</span>
+        </div>
+        <div class="admin-product-fields">
+          @for (var prefixIndex = 0; prefixIndex < Model.PrefixPrices.Count; prefixIndex++)
+          {
+            <input type="hidden" asp-for="PrefixPrices[prefixIndex].Prefix">
+            <input type="hidden" asp-for="PrefixPrices[prefixIndex].SupportsGlobal">
+            <div class="field">
+              <label asp-for="PrefixPrices[prefixIndex].BasicPrice">+994 @Model.PrefixPrices[prefixIndex].Prefix regular</label>
+              <input asp-for="PrefixPrices[prefixIndex].BasicPrice" type="number" min="0" step="0.01">
+            </div>
+            <div class="field">
+              <label asp-for="PrefixPrices[prefixIndex].BasicCurrency">Currency</label>
+              <select asp-for="PrefixPrices[prefixIndex].BasicCurrency">
+                <option value="AZN">AZN</option>
+                <option value="USD">USD</option>
+              </select>
+            </div>
+            @if (Model.PrefixPrices[prefixIndex].SupportsGlobal)
+            {
+              <div class="field">
+                <label asp-for="PrefixPrices[prefixIndex].GlobalPrice">+994 @Model.PrefixPrices[prefixIndex].Prefix global</label>
+                <input asp-for="PrefixPrices[prefixIndex].GlobalPrice" type="number" min="0" step="0.01">
+              </div>
+              <div class="field">
+                <label asp-for="PrefixPrices[prefixIndex].GlobalCurrency">Currency</label>
+                <select asp-for="PrefixPrices[prefixIndex].GlobalCurrency">
+                  <option value="AZN">AZN</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            }
+          }
         </div>
       </section>
     }

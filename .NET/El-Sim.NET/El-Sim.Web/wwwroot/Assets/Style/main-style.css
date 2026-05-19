@@ -2271,6 +2271,27 @@ input[type="checkbox"] {
     min-height: 300px;
 }
 
+.activation-hero {
+    padding-bottom: 8px;
+}
+
+.activation-card {
+    min-height: 220px;
+    padding: 30px;
+}
+
+.activation-card h2 {
+    font-size: clamp(30px, 3vw, 42px);
+}
+
+.activation-card form {
+    margin-top: 34px;
+}
+
+.activation-card .conversion-note {
+    max-width: 260px;
+}
+
 .wifi-note {
     grid-template-columns: minmax(0, 1fr) auto;
     margin-top: 88px;

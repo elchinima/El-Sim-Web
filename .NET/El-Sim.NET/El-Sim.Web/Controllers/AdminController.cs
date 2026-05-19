@@ -111,6 +111,7 @@ public class AdminController : Controller
             }
 
             product.Name = (editedProduct.Name ?? string.Empty).Trim();
+            product.ProductType = NormalizeProductType(metadata.Key, editedProduct.ProductType);
             product.NameRu = (editedProduct.NameRu ?? string.Empty).Trim();
             product.NameAz = (editedProduct.NameAz ?? string.Empty).Trim();
             product.Price = NormalizePrice(editedProduct.Price);
@@ -141,6 +142,28 @@ public class AdminController : Controller
             await SaveSetting("WifiStaticIpPercent", staticIpPercent.ToString("0.####", CultureInfo.InvariantCulture));
         }
 
+        if (metadata.Key == "esim")
+        {
+            foreach (var prefixPrice in model.PrefixPrices)
+            {
+                var prefix = PhoneNumberService.NormalizePrefix(prefixPrice.Prefix);
+
+                if (!PhoneNumberService.IsPrefixAllowed(prefix, false))
+                {
+                    continue;
+                }
+
+                await SaveSetting(PhoneNumberService.SettingKey(prefix, false), Math.Max(0m, prefixPrice.BasicPrice).ToString("0.##", CultureInfo.InvariantCulture));
+                await SaveSetting(PhoneNumberService.CurrencySettingKey(prefix, false), NormalizeCurrency(prefixPrice.BasicCurrency));
+
+                if (prefix == PhoneNumberService.GlobalPrefix)
+                {
+                    await SaveSetting(PhoneNumberService.SettingKey(prefix, true), Math.Max(0m, prefixPrice.GlobalPrice).ToString("0.##", CultureInfo.InvariantCulture));
+                    await SaveSetting(PhoneNumberService.CurrencySettingKey(prefix, true), NormalizeCurrency(prefixPrice.GlobalCurrency));
+                }
+            }
+        }
+
         await _dbContext.SaveChangesAsync();
         TempData["AdminMessage"] = "Products updated.";
 
@@ -166,6 +189,7 @@ public class AdminController : Controller
         _dbContext.Products.Add(new Product
         {
             Category = metadata.Key,
+            ProductType = metadata.Key == "esim" ? "basic" : NormalizeProductType(metadata.Key, null),
             Name = "New product",
             NameRu = "New product",
             NameAz = "New product",
@@ -253,7 +277,7 @@ public class AdminController : Controller
             purchase.Status = "Cancelled";
             purchase.CancelledAtUtc = DateTime.UtcNow;
             purchase.AdminNote = "Cancelled by admin.";
-            await RefreshUserAsset(purchase.User, purchase.Category, purchase.Id);
+            await RefreshUserAsset(purchase.User, purchase.Category, purchase.ProductType, purchase.Id);
 
             _dbContext.PaymentReceipts.Add(BuildAdminReceipt(purchase, "Cancel", "Cancelled", 0m));
             await _dbContext.SaveChangesAsync();
@@ -294,7 +318,7 @@ public class AdminController : Controller
                 CreatedAtUtc = DateTime.UtcNow
             });
 
-            await RefreshUserAsset(purchase.User, purchase.Category, purchase.Id);
+            await RefreshUserAsset(purchase.User, purchase.Category, purchase.ProductType, purchase.Id);
             _dbContext.PaymentReceipts.Add(BuildAdminReceipt(purchase, "Refund", "Refunded", purchase.TotalAzn));
             await _dbContext.SaveChangesAsync();
             TempData["AdminMessage"] = "Purchase refunded.";
@@ -642,6 +666,7 @@ public class AdminController : Controller
             .Select(product => new AdminProductItemViewModel
             {
                 Id = product.Id,
+                ProductType = product.ProductType,
                 Name = product.Name,
                 NameRu = product.NameRu,
                 NameAz = product.NameAz,
@@ -709,7 +734,36 @@ public class AdminController : Controller
             model.WifiStaticIpPercent = await GetDecimalSetting("WifiStaticIpPercent", 5m);
         }
 
+        if (metadata.Key == "esim")
+        {
+            model.PrefixPrices = await GetPrefixPrices();
+        }
+
         return model;
+    }
+
+    private async Task<List<PrefixPriceViewModel>> GetPrefixPrices()
+    {
+        var result = new List<PrefixPriceViewModel>();
+
+        foreach (var prefix in PhoneNumberService.BasicPrefixes)
+        {
+            result.Add(new PrefixPriceViewModel
+            {
+                Prefix = prefix,
+                BasicPrice = await GetDecimalSetting(PhoneNumberService.SettingKey(prefix, false), 5m),
+                BasicCurrency = await GetStringSetting(PhoneNumberService.CurrencySettingKey(prefix, false), "AZN"),
+                GlobalPrice = prefix == PhoneNumberService.GlobalPrefix
+                    ? await GetDecimalSetting(PhoneNumberService.SettingKey(prefix, true), 10m)
+                    : 0m,
+                GlobalCurrency = prefix == PhoneNumberService.GlobalPrefix
+                    ? await GetStringSetting(PhoneNumberService.CurrencySettingKey(prefix, true), "AZN")
+                    : "AZN",
+                SupportsGlobal = prefix == PhoneNumberService.GlobalPrefix
+            });
+        }
+
+        return result;
     }
 
     private async Task<decimal> GetDecimalSetting(string key, decimal fallback)
@@ -723,6 +777,17 @@ public class AdminController : Controller
         return decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed)
             ? parsed
             : fallback;
+    }
+
+    private async Task<string> GetStringSetting(string key, string fallback)
+    {
+        var value = await _dbContext.AppSettings
+            .AsNoTracking()
+            .Where(setting => setting.Key == key)
+            .Select(setting => setting.Value)
+            .FirstOrDefaultAsync();
+
+        return NormalizeCurrency(string.IsNullOrWhiteSpace(value) ? fallback : value);
     }
 
     private async Task SaveSetting(string key, string value)
@@ -758,7 +823,26 @@ public class AdminController : Controller
             .Trim();
     }
 
-    private async Task RefreshUserAsset(AppUser? user, string category, int ignoredPurchaseId)
+    private static string NormalizeProductType(string category, string? productType)
+    {
+        var normalizedType = (productType ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (category == "esim")
+        {
+            return normalizedType is "global" or "pass" or "tariff" or "basic" ? normalizedType : "basic";
+        }
+
+        return category switch
+        {
+            "pass" => "pass",
+            "tariffs" => "tariff",
+            "global" => "global",
+            "wifi" => "wifi",
+            _ => normalizedType
+        };
+    }
+
+    private async Task RefreshUserAsset(AppUser? user, string category, string productType, int ignoredPurchaseId)
     {
         if (user?.UserAssets is null)
         {
@@ -767,29 +851,58 @@ public class AdminController : Controller
 
         var replacement = await _dbContext.ProductPurchases
             .AsNoTracking()
-            .Where(item => item.UserId == user.Id && item.Category == category && item.Id != ignoredPurchaseId && item.Status == "Active")
+            .Where(item => item.UserId == user.Id
+                && item.Category == category
+                && item.ProductType == productType
+                && item.Id != ignoredPurchaseId
+                && item.Status == "Active")
             .OrderByDescending(item => item.CreatedAtUtc)
             .FirstOrDefaultAsync();
 
         var value = replacement?.ProductName;
 
-        switch (category)
+        switch (productType)
         {
-            case "esim":
-                user.UserAssets.BasicNumber = value;
+            case "basic":
+                user.UserAssets.BasicNumber = replacement?.PhoneNumber ?? value;
                 break;
-            case "pass":
-                user.UserAssets.Pass = value;
-                break;
-            case "tariffs":
-                user.UserAssets.BasicTariff = value;
+            case "global" when category == "esim":
+                user.UserAssets.GlobalNumber = replacement?.PhoneNumber ?? value;
                 break;
             case "global":
                 user.UserAssets.GlobalTariff = value;
                 break;
+            case "pass":
+                user.UserAssets.Pass = value;
+                break;
+            case "tariff":
+                user.UserAssets.BasicTariff = value;
+                break;
             case "wifi":
                 user.UserAssets.WiFi = value;
                 break;
+        }
+
+        if (string.IsNullOrWhiteSpace(productType))
+        {
+            switch (category)
+            {
+                case "esim":
+                user.UserAssets.BasicNumber = value;
+                break;
+                case "pass":
+                user.UserAssets.Pass = value;
+                break;
+                case "tariffs":
+                user.UserAssets.BasicTariff = value;
+                break;
+                case "global":
+                user.UserAssets.GlobalTariff = value;
+                break;
+                case "wifi":
+                user.UserAssets.WiFi = value;
+                break;
+            }
         }
     }
 

@@ -4,6 +4,7 @@ public class ProductCardViewModel
 {
     public int Id { get; set; }
     public string Category { get; set; } = string.Empty;
+    public string ProductType { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string NameRu { get; set; } = string.Empty;
     public string NameAz { get; set; } = string.Empty;
@@ -95,12 +96,14 @@ public class AdminProductEditorViewModel
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public decimal WifiStaticIpPercent { get; set; } = 5m;
+    public List<PrefixPriceViewModel> PrefixPrices { get; set; } = [];
     public List<AdminProductItemViewModel> Products { get; set; } = [];
 }
 
 public class AdminProductItemViewModel
 {
     public int Id { get; set; }
+    public string ProductType { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string NameRu { get; set; } = string.Empty;
     public string NameAz { get; set; } = string.Empty;
@@ -136,6 +139,23 @@ public class AdminProductItemViewModel
 
         return string.IsNullOrWhiteSpace(cleanPrice) ? string.Empty : $"{cleanPrice} {currency}";
     }
+}
+
+public class PrefixPriceViewModel
+{
+    public string Prefix { get; set; } = string.Empty;
+    public decimal BasicPrice { get; set; }
+    public string BasicCurrency { get; set; } = "AZN";
+    public decimal GlobalPrice { get; set; }
+    public string GlobalCurrency { get; set; } = "AZN";
+    public bool SupportsGlobal { get; set; }
+}
+
+public class ActivationPageViewModel
+{
+    public decimal BalanceAzn { get; set; }
+    public ExchangeRateResult? ExchangeRate { get; set; }
+    public List<PrefixPriceViewModel> PrefixPrices { get; set; } = [];
 }
 
 public class AdminSliderListViewModel

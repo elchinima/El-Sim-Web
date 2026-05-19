@@ -8,6 +8,7 @@ namespace El_Sim.Web.Controllers
         private readonly IWebHostEnvironment _environment;
         private readonly ExchangeRateService _exchangeRateService;
         private readonly ProductPricingService _productPricingService;
+        private readonly PhoneNumberService _phoneNumberService;
         private readonly StripePaymentService _stripePaymentService;
 
         public HomeController(
@@ -17,6 +18,7 @@ namespace El_Sim.Web.Controllers
             IWebHostEnvironment environment,
             ExchangeRateService exchangeRateService,
             ProductPricingService productPricingService,
+            PhoneNumberService phoneNumberService,
             StripePaymentService stripePaymentService)
         {
             _dbContext = dbContext;
@@ -25,6 +27,7 @@ namespace El_Sim.Web.Controllers
             _environment = environment;
             _exchangeRateService = exchangeRateService;
             _productPricingService = productPricingService;
+            _phoneNumberService = phoneNumberService;
             _stripePaymentService = stripePaymentService;
         }
 
@@ -57,6 +60,24 @@ namespace El_Sim.Web.Controllers
         public async Task<IActionResult> Wifi()
         {
             return View(await BuildCategoryPageWithRate("wifi", await GetProducts("wifi")));
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Activation()
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            return View(new ActivationPageViewModel
+            {
+                BalanceAzn = user.Account.BalanceAzn,
+                ExchangeRate = await _exchangeRateService.GetUsdToAznAsync(HttpContext.RequestAborted),
+                PrefixPrices = await GetPrefixPrices()
+            });
         }
 
         public IActionResult Login()
@@ -364,6 +385,20 @@ namespace El_Sim.Web.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
+            var productType = ResolveProductType(product);
+
+            if (RequiresBasicNumber(productType, product.Category) && string.IsNullOrWhiteSpace(user.UserAssets?.BasicNumber))
+            {
+                TempData["ProfileError"] = "Buy a regular number first.";
+                return RedirectToAction(nameof(Profile));
+            }
+
+            if (RequiresGlobalNumber(productType, product.Category) && string.IsNullOrWhiteSpace(user.UserAssets?.GlobalNumber))
+            {
+                TempData["ProfileError"] = "Buy a global number first.";
+                return RedirectToAction(nameof(Profile));
+            }
+
             var calculation = await _productPricingService.CalculateAsync(product, _exchangeRateService, HttpContext.RequestAborted);
             var staticIpRate = product.Category == "wifi" && includeStaticIp
                 ? await GetDecimalSetting("WifiStaticIpPercent", 5m) / 100m
@@ -378,7 +413,10 @@ namespace El_Sim.Web.Controllers
             }
 
             var oldPurchases = await _dbContext.ProductPurchases
-                .Where(item => item.UserId == user.Id && item.Category == product.Category && item.Status == "Active")
+                .Where(item => item.UserId == user.Id
+                    && item.Category == product.Category
+                    && item.ProductType == productType
+                    && item.Status == "Active")
                 .ToListAsync();
 
             foreach (var oldPurchase in oldPurchases)
@@ -395,6 +433,7 @@ namespace El_Sim.Web.Controllers
                 UserId = user.Id,
                 ProductId = product.Id,
                 Category = product.Category,
+                ProductType = productType,
                 ProductName = includeStaticIp && product.Category == "wifi" ? $"{product.Name} + Static IP" : product.Name,
                 ProductCurrency = calculation.Currency,
                 ProductAmount = calculation.ProductAmount,
@@ -451,6 +490,159 @@ namespace El_Sim.Web.Controllers
                     purchase.HasStaticIp,
                     purchase.StaticIpRate,
                     purchase.StaticIpFeeAzn
+                }));
+
+            await _dbContext.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Profile));
+        }
+
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PurchaseNumber(string prefix, bool isGlobal)
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            var normalizedPrefix = PhoneNumberService.NormalizePrefix(prefix);
+
+            if (!PhoneNumberService.IsPrefixAllowed(normalizedPrefix, isGlobal))
+            {
+                TempData["ActivationError"] = "Invalid prefix.";
+                return RedirectToAction(nameof(Activation));
+            }
+
+            var productType = isGlobal ? "global" : "basic";
+
+            if (isGlobal && !string.IsNullOrWhiteSpace(user.UserAssets?.GlobalNumber))
+            {
+                TempData["ActivationError"] = "You already have a global number.";
+                return RedirectToAction(nameof(Activation));
+            }
+
+            if (!isGlobal && !string.IsNullOrWhiteSpace(user.UserAssets?.BasicNumber))
+            {
+                TempData["ActivationError"] = "You already have a regular number.";
+                return RedirectToAction(nameof(Activation));
+            }
+
+            var product = await _dbContext.Products
+                .Where(item => item.Category == "esim" && item.ProductType == productType)
+                .OrderBy(item => item.SortOrder)
+                .ThenBy(item => item.Id)
+                .FirstOrDefaultAsync()
+                ?? await _dbContext.Products
+                    .Where(item => item.Category == "esim")
+                    .OrderBy(item => item.SortOrder)
+                    .ThenBy(item => item.Id)
+                    .FirstOrDefaultAsync();
+
+            if (product is null)
+            {
+                TempData["ActivationError"] = "Number product is not configured.";
+                return RedirectToAction(nameof(Activation));
+            }
+
+            var basePrice = await GetDecimalSetting(PhoneNumberService.SettingKey(normalizedPrefix, isGlobal), isGlobal ? 10m : 5m);
+            var currency = await GetStringSetting(PhoneNumberService.CurrencySettingKey(normalizedPrefix, isGlobal), "AZN");
+            var generatedNumber = await _phoneNumberService.GenerateAsync(normalizedPrefix, isGlobal);
+            var productAmount = decimal.Round(basePrice * generatedNumber.PriceMultiplier, 2, MidpointRounding.AwayFromZero);
+            var exchangeRate = currency == "USD"
+                ? await _exchangeRateService.GetUsdToAznAsync(HttpContext.RequestAborted)
+                : null;
+            var totalAzn = exchangeRate is null
+                ? productAmount
+                : decimal.Round(productAmount * exchangeRate.UsdToAzn * (1 + ProductPricingService.ConversionCommissionRate), 2, MidpointRounding.AwayFromZero);
+
+            if (user.Account.BalanceAzn < totalAzn)
+            {
+                TempData["ActivationError"] = "Not enough balance.";
+                return RedirectToAction(nameof(Activation));
+            }
+
+            var oldPurchases = await _dbContext.ProductPurchases
+                .Where(item => item.UserId == user.Id && item.Category == "esim" && item.ProductType == productType && item.Status == "Active")
+                .ToListAsync();
+
+            foreach (var oldPurchase in oldPurchases)
+            {
+                oldPurchase.Status = "Cancelled";
+                oldPurchase.CancelledAtUtc = DateTime.UtcNow;
+                oldPurchase.AdminNote = "Replaced by a new number.";
+            }
+
+            user.UserAssets ??= new UserAssets();
+            user.Account.BalanceAzn -= totalAzn;
+
+            if (isGlobal)
+            {
+                user.UserAssets.GlobalNumber = generatedNumber.Number;
+            }
+            else
+            {
+                user.UserAssets.BasicNumber = generatedNumber.Number;
+            }
+
+            var productName = isGlobal ? $"Global number {generatedNumber.Number}" : $"Regular number {generatedNumber.Number}";
+            var purchase = new ProductPurchase
+            {
+                UserId = user.Id,
+                ProductId = product.Id,
+                Category = "esim",
+                ProductType = productType,
+                ProductName = productName,
+                PhoneNumber = generatedNumber.Number,
+                PhonePrefix = generatedNumber.Prefix,
+                ProductCurrency = currency,
+                ProductAmount = productAmount,
+                TotalAzn = totalAzn,
+                ExchangeRate = exchangeRate?.UsdToAzn,
+                CommissionRate = exchangeRate is null ? 0m : ProductPricingService.ConversionCommissionRate,
+                Status = "Active",
+                CreatedAtUtc = DateTime.UtcNow
+            };
+
+            _dbContext.ProductPurchases.Add(purchase);
+            await _dbContext.SaveChangesAsync();
+
+            _dbContext.WalletTransactions.Add(new WalletTransaction
+            {
+                UserId = user.Id,
+                ProductPurchaseId = purchase.Id,
+                Type = "Purchase",
+                Status = "Paid",
+                AmountAzn = -totalAzn,
+                BalanceAfterAzn = user.Account.BalanceAzn,
+                Description = purchase.ProductName,
+                CreatedAtUtc = DateTime.UtcNow
+            });
+
+            _dbContext.PaymentReceipts.Add(BuildReceipt(
+                user.Id,
+                purchase.Id,
+                null,
+                "Purchase",
+                "Paid",
+                currency,
+                productAmount,
+                totalAzn,
+                exchangeRate?.UsdToAzn,
+                exchangeRate is null ? 0m : ProductPricingService.ConversionCommissionRate,
+                purchase.ProductName,
+                new
+                {
+                    purchase.PhoneNumber,
+                    purchase.PhonePrefix,
+                    purchase.ProductType,
+                    BasePrice = basePrice,
+                    Currency = currency,
+                    generatedNumber.PriceMultiplier,
+                    TotalAzn = totalAzn
                 }));
 
             await _dbContext.SaveChangesAsync();
@@ -737,12 +929,50 @@ namespace El_Sim.Web.Controllers
                 : fallback;
         }
 
+        private async Task<string> GetStringSetting(string key, string fallback)
+        {
+            var value = await _dbContext.AppSettings
+                .AsNoTracking()
+                .Where(setting => setting.Key == key)
+                .Select(setting => setting.Value)
+                .FirstOrDefaultAsync();
+
+            var normalized = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim().ToUpperInvariant();
+
+            return normalized == "USD" ? "USD" : "AZN";
+        }
+
+        private async Task<List<PrefixPriceViewModel>> GetPrefixPrices()
+        {
+            var result = new List<PrefixPriceViewModel>();
+
+            foreach (var prefix in PhoneNumberService.BasicPrefixes)
+            {
+                result.Add(new PrefixPriceViewModel
+                {
+                    Prefix = prefix,
+                    BasicPrice = await GetDecimalSetting(PhoneNumberService.SettingKey(prefix, false), 5m),
+                    BasicCurrency = await GetStringSetting(PhoneNumberService.CurrencySettingKey(prefix, false), "AZN"),
+                    GlobalPrice = prefix == PhoneNumberService.GlobalPrefix
+                        ? await GetDecimalSetting(PhoneNumberService.SettingKey(prefix, true), 10m)
+                        : 0m,
+                    GlobalCurrency = prefix == PhoneNumberService.GlobalPrefix
+                        ? await GetStringSetting(PhoneNumberService.CurrencySettingKey(prefix, true), "AZN")
+                        : "AZN",
+                    SupportsGlobal = prefix == PhoneNumberService.GlobalPrefix
+                });
+            }
+
+            return result;
+        }
+
         private static ProductCardViewModel ToProductCard(Product product)
         {
             return new ProductCardViewModel
             {
                 Id = product.Id,
                 Category = product.Category,
+                ProductType = ResolveProductType(product),
                 Name = product.Name,
                 NameRu = product.NameRu,
                 NameAz = product.NameAz,
@@ -872,10 +1102,11 @@ namespace El_Sim.Web.Controllers
         {
             user.UserAssets ??= new UserAssets();
             var productName = hasStaticIp ? $"{product.Name} + Static IP" : product.Name;
+            var productType = ResolveProductType(product);
 
-            switch (product.Category)
+            switch (productType)
             {
-                case "esim":
+                case "basic":
                     user.UserAssets.BasicNumber = productName;
                     break;
                 case "pass":
@@ -891,6 +1122,34 @@ namespace El_Sim.Web.Controllers
                     user.UserAssets.WiFi = productName;
                     break;
             }
+        }
+
+        private static string ResolveProductType(Product product)
+        {
+            if (!string.IsNullOrWhiteSpace(product.ProductType))
+            {
+                return product.ProductType.Trim().ToLowerInvariant();
+            }
+
+            return product.Category switch
+            {
+                "pass" => "pass",
+                "tariffs" => "tariff",
+                "global" => "global",
+                "wifi" => "wifi",
+                _ => "basic"
+            };
+        }
+
+        private static bool RequiresBasicNumber(string productType, string category)
+        {
+            return productType is "pass" or "tariff"
+                || category is "pass" or "tariffs";
+        }
+
+        private static bool RequiresGlobalNumber(string productType, string category)
+        {
+            return productType == "global";
         }
 
         private async Task SendTwoFactorCode(AppUser user, bool rememberMe)

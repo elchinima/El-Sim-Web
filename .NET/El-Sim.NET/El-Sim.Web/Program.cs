@@ -18,6 +18,7 @@ builder.Services.AddScoped<AccountDataInitializer>();
 builder.Services.AddScoped<ProductDataInitializer>();
 builder.Services.AddScoped<PurchaseDataInitializer>();
 builder.Services.AddScoped<ProductPricingService>();
+builder.Services.AddScoped<PhoneNumberService>();
 builder.Services.AddScoped<StripePaymentService>();
 builder.Services.AddHttpClient<ExchangeRateService>();
 builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
@@ -81,6 +82,11 @@ app.MapControllerRoute(
     name: "wifi-html",
     pattern: "wifi.html",
     defaults: new { controller = "Home", action = "Wifi" });
+
+app.MapControllerRoute(
+    name: "activation-html",
+    pattern: "activation.html",
+    defaults: new { controller = "Home", action = "Activation" });
 
 app.MapControllerRoute(
     name: "login-html",

@@ -17,6 +17,7 @@ public class ProductDataInitializer
                 CREATE TABLE [Products] (
                     [Id] int IDENTITY(1,1) NOT NULL CONSTRAINT [PK_Products] PRIMARY KEY,
                     [Category] nvarchar(32) NOT NULL,
+                    [ProductType] nvarchar(32) NOT NULL CONSTRAINT [DF_Products_ProductType] DEFAULT N'',
                     [Name] nvarchar(80) NOT NULL,
                     [NameRu] nvarchar(80) NOT NULL CONSTRAINT [DF_Products_NameRu] DEFAULT N'',
                     [NameAz] nvarchar(80) NOT NULL CONSTRAINT [DF_Products_NameAz] DEFAULT N'',
@@ -67,6 +68,13 @@ public class ProductDataInitializer
             IF COL_LENGTH(N'[Products]', N'Currency') IS NULL
             BEGIN
                 ALTER TABLE [Products] ADD [Currency] nvarchar(3) NOT NULL CONSTRAINT [DF_Products_Currency] DEFAULT N'AZN';
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF COL_LENGTH(N'[Products]', N'ProductType') IS NULL
+            BEGIN
+                ALTER TABLE [Products] ADD [ProductType] nvarchar(32) NOT NULL CONSTRAINT [DF_Products_ProductType] DEFAULT N'';
             END
             """);
 
@@ -147,9 +155,9 @@ public class ProductDataInitializer
     {
         List<Product> products =
         [
-            new Product { Category = "esim", Name = "Start", Price = "3", Currency = "AZN", Description = "5 GB of mobile data", Features = "5 GB of mobile data", ButtonText = "Choose", SortOrder = 10 },
-            new Product { Category = "esim", Name = "Smart", Price = "5", Currency = "AZN", Description = "10 GB, calls and SMS", Features = "10 GB, calls and SMS", ButtonText = "Choose", IsFeatured = true, IsFavorite = true, SortOrder = 20 },
-            new Product { Category = "esim", Name = "Max", Price = "9", Currency = "AZN", Description = "Unlimited mobile data", Features = "Unlimited mobile data", ButtonText = "Choose", SortOrder = 30 },
+            new Product { Category = "esim", ProductType = "basic", Name = "Start", Price = "3", Currency = "AZN", Description = "5 GB of mobile data", Features = "5 GB of mobile data", ButtonText = "Choose", SortOrder = 10 },
+            new Product { Category = "esim", ProductType = "basic", Name = "Smart", Price = "5", Currency = "AZN", Description = "10 GB, calls and SMS", Features = "10 GB, calls and SMS", ButtonText = "Choose", IsFeatured = true, IsFavorite = true, SortOrder = 20 },
+            new Product { Category = "esim", ProductType = "basic", Name = "Max", Price = "9", Currency = "AZN", Description = "Unlimited mobile data", Features = "Unlimited mobile data", ButtonText = "Choose", SortOrder = 30 },
 
             new Product { Category = "pass", Name = "Pass", Price = "4.00", Currency = "AZN", Period = "30 days", Features = "Up to 50 free calls\nBonuses from our partners\nOpportunity to earn up to 5GB\nConnection to next-generation 5G internet\nUp to 50% ad blocking", ButtonText = "Choose Pass", IsFeatured = true, IsFavorite = true, SortOrder = 10 },
             new Product { Category = "pass", Name = "Pass Plus", Price = "7.00", Currency = "AZN", Period = "30 days", Features = "5G+ internet connection\nUp to 100 free calls\nOpportunity to earn up to 10GB\nHigher bonuses from partners\nUp to 70% ad blocking", ButtonText = "Choose Plus", SortOrder = 20 },
@@ -204,6 +212,7 @@ public class ProductDataInitializer
 
             product.NameRu = Fill(product.NameRu, seedProduct.NameRu);
             product.NameAz = Fill(product.NameAz, seedProduct.NameAz);
+            product.ProductType = Fill(product.ProductType, seedProduct.ProductType);
             product.PriceRu = Fill(product.PriceRu, seedProduct.PriceRu);
             product.PriceAz = Fill(product.PriceAz, seedProduct.PriceAz);
             product.Currency = Fill(product.Currency, seedProduct.Currency);

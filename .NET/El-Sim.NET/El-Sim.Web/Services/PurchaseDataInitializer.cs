@@ -19,7 +19,10 @@ public class PurchaseDataInitializer
                     [UserId] int NOT NULL,
                     [ProductId] int NOT NULL,
                     [Category] nvarchar(32) NOT NULL,
+                    [ProductType] nvarchar(32) NOT NULL CONSTRAINT [DF_ProductPurchases_ProductType] DEFAULT N'',
                     [ProductName] nvarchar(80) NOT NULL,
+                    [PhoneNumber] nvarchar(32) NOT NULL CONSTRAINT [DF_ProductPurchases_PhoneNumber] DEFAULT N'',
+                    [PhonePrefix] nvarchar(2) NOT NULL CONSTRAINT [DF_ProductPurchases_PhonePrefix] DEFAULT N'',
                     [ProductCurrency] nvarchar(3) NOT NULL,
                     [ProductAmount] decimal(18,2) NOT NULL,
                     [TotalAzn] decimal(18,2) NOT NULL,
@@ -38,6 +41,18 @@ public class PurchaseDataInitializer
             """);
 
         await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF COL_LENGTH(N'[ProductPurchases]', N'ProductType') IS NULL
+            BEGIN
+                ALTER TABLE [ProductPurchases] ADD [ProductType] nvarchar(32) NOT NULL CONSTRAINT [DF_ProductPurchases_ProductType] DEFAULT N'';
+            END
+            IF COL_LENGTH(N'[ProductPurchases]', N'PhoneNumber') IS NULL
+            BEGIN
+                ALTER TABLE [ProductPurchases] ADD [PhoneNumber] nvarchar(32) NOT NULL CONSTRAINT [DF_ProductPurchases_PhoneNumber] DEFAULT N'';
+            END
+            IF COL_LENGTH(N'[ProductPurchases]', N'PhonePrefix') IS NULL
+            BEGIN
+                ALTER TABLE [ProductPurchases] ADD [PhonePrefix] nvarchar(2) NOT NULL CONSTRAINT [DF_ProductPurchases_PhonePrefix] DEFAULT N'';
+            END
             IF COL_LENGTH(N'[ProductPurchases]', N'HasStaticIp') IS NULL
             BEGIN
                 ALTER TABLE [ProductPurchases] ADD [HasStaticIp] bit NOT NULL CONSTRAINT [DF_ProductPurchases_HasStaticIp] DEFAULT CAST(0 AS bit);
@@ -112,6 +127,15 @@ public class PurchaseDataInitializer
             END
             """);
 
+        foreach (var prefix in PhoneNumberService.BasicPrefixes)
+        {
+            await EnsureSetting(PhoneNumberService.SettingKey(prefix, false), "5");
+            await EnsureSetting(PhoneNumberService.CurrencySettingKey(prefix, false), "AZN");
+        }
+
+        await EnsureSetting(PhoneNumberService.SettingKey(PhoneNumberService.GlobalPrefix, true), "10");
+        await EnsureSetting(PhoneNumberService.CurrencySettingKey(PhoneNumberService.GlobalPrefix, true), "AZN");
+
         await EnsureForeignKey("ProductPurchases", "Users", "FK_ProductPurchases_Users_UserId", "UserId", "Id", "CASCADE");
         await EnsureForeignKey("ProductPurchases", "Products", "FK_ProductPurchases_Products_ProductId", "ProductId", "Id", "NO ACTION");
         await EnsureForeignKey("WalletTransactions", "Users", "FK_WalletTransactions_Users_UserId", "UserId", "Id", "CASCADE");
@@ -121,6 +145,7 @@ public class PurchaseDataInitializer
         await EnsureForeignKey("PaymentReceipts", "WalletTransactions", "FK_PaymentReceipts_WalletTransactions_WalletTransactionId", "WalletTransactionId", "Id", "NO ACTION");
 
         await EnsureIndex("ProductPurchases", "IX_ProductPurchases_UserId_Category_Status", "[UserId], [Category], [Status]", false, null);
+        await EnsureIndex("ProductPurchases", "IX_ProductPurchases_PhoneNumber", "[PhoneNumber]", true, "[PhoneNumber] <> N''");
         await EnsureIndex("WalletTransactions", "IX_WalletTransactions_UserId_CreatedAtUtc", "[UserId], [CreatedAtUtc]", false, null);
         await EnsureIndex("WalletTransactions", "IX_WalletTransactions_StripeSessionId", "[StripeSessionId]", true, "[StripeSessionId] IS NOT NULL");
         await EnsureIndex("PaymentReceipts", "IX_PaymentReceipts_ReceiptNumber", "[ReceiptNumber]", true, null);
@@ -148,6 +173,18 @@ public class PurchaseDataInitializer
             IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'{name}' AND [object_id] = OBJECT_ID(N'[{table}]'))
             BEGIN
                 CREATE {uniqueSql}INDEX [{name}] ON [{table}] ({columns}){filterSql};
+            END
+            """;
+
+        await _dbContext.Database.ExecuteSqlRawAsync(sql);
+    }
+
+    private async Task EnsureSetting(string key, string value)
+    {
+        var sql = $"""
+            IF NOT EXISTS (SELECT 1 FROM [AppSettings] WHERE [Key] = N'{key}')
+            BEGIN
+                INSERT INTO [AppSettings] ([Key], [Value]) VALUES (N'{key}', N'{value}');
             END
             """;
 

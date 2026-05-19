@@ -64,6 +64,20 @@ public class AccountDataInitializer
             """);
 
         await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_UserAssets_BasicNumber' AND [object_id] = OBJECT_ID(N'[UserAssets]'))
+            BEGIN
+                CREATE UNIQUE INDEX [IX_UserAssets_BasicNumber] ON [UserAssets] ([BasicNumber]) WHERE [BasicNumber] IS NOT NULL AND [BasicNumber] <> N'';
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
+            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE [name] = N'IX_UserAssets_GlobalNumber' AND [object_id] = OBJECT_ID(N'[UserAssets]'))
+            BEGIN
+                CREATE UNIQUE INDEX [IX_UserAssets_GlobalNumber] ON [UserAssets] ([GlobalNumber]) WHERE [GlobalNumber] IS NOT NULL AND [GlobalNumber] <> N'';
+            END
+            """);
+
+        await _dbContext.Database.ExecuteSqlRawAsync("""
             IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE [name] = N'FK_Users_UserAssets_UserAssetsId')
             BEGIN
                 ALTER TABLE [Users] ADD CONSTRAINT [FK_Users_UserAssets_UserAssetsId]

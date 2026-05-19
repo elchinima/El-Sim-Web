@@ -56,6 +56,10 @@ public class ElSimDbContext : DbContext
             entity.Property(userAssets => userAssets.BasicTariff).HasMaxLength(80);
             entity.Property(userAssets => userAssets.GlobalTariff).HasMaxLength(80);
             entity.Property(userAssets => userAssets.WiFi).HasMaxLength(80);
+            entity.HasIndex(userAssets => userAssets.BasicNumber).IsUnique()
+                .HasFilter("[BasicNumber] IS NOT NULL AND [BasicNumber] <> N''");
+            entity.HasIndex(userAssets => userAssets.GlobalNumber).IsUnique()
+                .HasFilter("[GlobalNumber] IS NOT NULL AND [GlobalNumber] <> N''");
         });
 
         modelBuilder.Entity<Account>(entity =>
@@ -93,6 +97,7 @@ public class ElSimDbContext : DbContext
             entity.HasKey(product => product.Id);
             entity.Property(product => product.Id).ValueGeneratedOnAdd();
             entity.Property(product => product.Category).HasMaxLength(32).IsRequired();
+            entity.Property(product => product.ProductType).HasMaxLength(32).HasDefaultValue(string.Empty).IsRequired();
             entity.Property(product => product.Name).HasMaxLength(80).IsRequired();
             entity.Property(product => product.NameRu).HasMaxLength(80);
             entity.Property(product => product.NameAz).HasMaxLength(80);
@@ -125,7 +130,10 @@ public class ElSimDbContext : DbContext
             entity.HasKey(purchase => purchase.Id);
             entity.Property(purchase => purchase.Id).ValueGeneratedOnAdd();
             entity.Property(purchase => purchase.Category).HasMaxLength(32).IsRequired();
+            entity.Property(purchase => purchase.ProductType).HasMaxLength(32).HasDefaultValue(string.Empty).IsRequired();
             entity.Property(purchase => purchase.ProductName).HasMaxLength(80).IsRequired();
+            entity.Property(purchase => purchase.PhoneNumber).HasMaxLength(32).HasDefaultValue(string.Empty).IsRequired();
+            entity.Property(purchase => purchase.PhonePrefix).HasMaxLength(2).HasDefaultValue(string.Empty).IsRequired();
             entity.Property(purchase => purchase.ProductCurrency).HasMaxLength(3).IsRequired();
             entity.Property(purchase => purchase.ProductAmount).HasColumnType("decimal(18,2)");
             entity.Property(purchase => purchase.TotalAzn).HasColumnType("decimal(18,2)");
@@ -146,6 +154,8 @@ public class ElSimDbContext : DbContext
                 .HasForeignKey(purchase => purchase.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(purchase => new { purchase.UserId, purchase.Category, purchase.Status });
+            entity.HasIndex(purchase => purchase.PhoneNumber).IsUnique()
+                .HasFilter("[PhoneNumber] <> N''");
         });
 
         modelBuilder.Entity<WalletTransaction>(entity =>
