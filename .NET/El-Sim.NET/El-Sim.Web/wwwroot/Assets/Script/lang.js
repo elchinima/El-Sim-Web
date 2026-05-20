@@ -356,6 +356,44 @@ Object.assign(translations.az, {
     "Site": "Sayt"
 });
 
+Object.assign(translations.ru, {
+    "support chat": "чат поддержки",
+    "How can we help?": "Как мы можем помочь?",
+    "Online": "Онлайн",
+    "El-Sim Support": "Поддержка El-Sim",
+    "Usually replies in a moment": "Обычно отвечает через мгновение",
+    "Live simulation": "Симуляция",
+    "Hello! Tell us what happened, and we will guide you step by step.": "Здравствуйте! Расскажите, что произошло, и мы проведем вас шаг за шагом.",
+    "Now": "Сейчас",
+    "Type your message": "Введите сообщение",
+    "Send": "Отправить",
+    "Send message": "Отправить сообщение",
+    "Support is typing": "Поддержка печатает",
+    "Thanks, we are checking this in the simulator. Please keep your phone near a stable internet connection.": "Спасибо, мы проверяем это в симуляторе. Держите телефон рядом со стабильным интернет-соединением.",
+    "If this is about a QR code, open your phone eSIM settings and make sure the code has not been used before.": "Если вопрос о QR-коде, откройте настройки eSIM на телефоне и убедитесь, что код раньше не использовался.",
+    "For balance or plan questions, we can help you compare the current package with the best next option.": "По вопросам баланса или тарифа мы поможем сравнить текущий пакет с лучшим следующим вариантом.",
+    "We will stay here while you try it. Send another message if something still does not work.": "Мы остаемся здесь, пока вы пробуете. Напишите еще раз, если что-то все еще не работает."
+});
+
+Object.assign(translations.az, {
+    "support chat": "dəstək çat",
+    "How can we help?": "Necə kömək edə bilərik?",
+    "Online": "Onlayn",
+    "El-Sim Support": "El-Sim Dəstək",
+    "Usually replies in a moment": "Adətən bir azdan cavab verir",
+    "Live simulation": "Simulyasiya",
+    "Hello! Tell us what happened, and we will guide you step by step.": "Salam! Nə baş verdiyini yazın, sizi addım-addım yönləndirəcəyik.",
+    "Now": "İndi",
+    "Type your message": "Mesajınızı yazın",
+    "Send": "Göndər",
+    "Send message": "Mesaj göndər",
+    "Support is typing": "Dəstək yazır",
+    "Thanks, we are checking this in the simulator. Please keep your phone near a stable internet connection.": "Təşəkkürlər, bunu simulyatorda yoxlayırıq. Telefonunuzu sabit internet bağlantısına yaxın saxlayın.",
+    "If this is about a QR code, open your phone eSIM settings and make sure the code has not been used before.": "Söhbət QR koddan gedirsə, telefonunuzun eSIM ayarlarını açın və kodun əvvəl istifadə olunmadığına əmin olun.",
+    "For balance or plan questions, we can help you compare the current package with the best next option.": "Balans və ya tarif suallarında cari paketi ən yaxşı növbəti seçimlə müqayisə etməyə kömək edərik.",
+    "We will stay here while you try it. Send another message if something still does not work.": "Siz yoxlayarkən biz buradayıq. Nəsə hələ də işləmirsə, yenidən mesaj göndərin."
+});
+
 const originalText = new WeakMap();
 
 const getTranslation = (text, language) => {

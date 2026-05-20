@@ -34,6 +34,11 @@
         gap: 10px;
     }
 
+    .support-page-header {
+        grid-template-columns: 1fr auto auto;
+        flex-wrap: nowrap;
+    }
+
     .menu-toggle {
         display: inline-flex;
         flex-direction: column;
@@ -128,6 +133,12 @@
         flex-direction: column;
     }
 
+    .support-chat-hero,
+    .support-chat-head {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .admin-navbar {
         grid-template-columns: auto minmax(0, 1fr) auto;
         justify-items: stretch;
@@ -218,6 +229,7 @@
     .section,
     .device-strip,
     .support,
+    .support-chat-shell,
     .auth-shell,
     .profile-shell,
     .admin-shell,
@@ -226,6 +238,25 @@
     }
 
     .brand span {
+        display: none;
+    }
+
+    .support-page-header {
+        grid-template-columns: auto auto 1fr;
+        padding: 10px;
+    }
+
+    .support-page-header .language-switch {
+        justify-self: end;
+    }
+
+    .support-home-link {
+        min-width: 42px;
+        min-height: 42px;
+        padding: 0 11px;
+    }
+
+    .support-home-link span {
         display: none;
     }
 
@@ -273,11 +304,20 @@
 
     .nav-links a {
         height: 38px;
+        justify-content: center;
     }
 
     .nav-links svg {
         width: 17px;
         height: 17px;
+    }
+
+    .nav-links {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .nav-links a span {
+        display: none;
     }
 
     .hero {
@@ -434,6 +474,61 @@
     .admin-hero-actions .button,
     .admin-filter-actions .button {
         width: 100%;
+    }
+
+    .support-chat-shell {
+        gap: 16px;
+        height: calc(100dvh - 88px);
+        padding: 14px 0 0;
+    }
+
+    .support-chat-hero h1 {
+        font-size: 34px;
+    }
+
+    .support-chat-panel {
+        grid-template-rows: auto minmax(0, 1fr) auto;
+        border-radius: 20px;
+    }
+
+    .support-chat-head {
+        padding: 16px;
+    }
+
+    .support-chat-badge {
+        display: none;
+    }
+
+    .support-chat-messages {
+        padding: 16px;
+    }
+
+    .chat-message {
+        max-width: 94%;
+    }
+
+    .chat-message-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+    }
+
+    .chat-message div {
+        padding: 12px 14px;
+    }
+
+    .support-chat-form {
+        grid-template-columns: minmax(0, 1fr) 54px;
+        padding: 12px;
+    }
+
+    .support-chat-send {
+        min-width: 54px;
+        padding: 0;
+    }
+
+    .support-chat-send span {
+        display: none;
     }
 
     .admin-slider-file-field,

@@ -34,10 +34,37 @@
   <link rel="stylesheet" href="/Assets/Style/main-responsive.css">
   <script defer src="/Assets/Script/main-script.js"></script>
   <script defer src="/Assets/Script/lang.js"></script>
+  <script defer src="/Assets/Script/support-chat.js"></script>
   <script defer src="/Assets/Script/carousel.js"></script>
 </head>
 
-<body>
+<body class="@(ViewData["SupportChrome"] as bool? == true ? "support-chat-page" : "")">
+  @if (ViewData["SupportChrome"] as bool? == true)
+  {
+    <header class="site-header support-page-header">
+      <a class="brand" href="/" aria-label="El-Sim home">
+        <img src="/Assets/Image/Logo/El-Sim_Logo_Icon.png" alt="El-Sim">
+        <span>El-Sim</span>
+      </a>
+
+      <a class="support-home-link" href="/" aria-label="Home">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 11 12 3l9 8"></path>
+          <path d="M5 10v10h14V10"></path>
+          <path d="M9 20v-6h6v6"></path>
+        </svg>
+        <span>Home</span>
+      </a>
+
+      <div class="language-switch" aria-label="Language">
+        <button type="button" data-lang-button="en">EN</button>
+        <button type="button" data-lang-button="ru">RU</button>
+        <button type="button" data-lang-button="az">AZ</button>
+      </div>
+    </header>
+  }
+  else
+  {
   <header class="site-header">
     <a class="brand" href="/" aria-label="El-Sim">
       <img src="/Assets/Image/Logo/El-Sim_Logo_Icon.png" alt="El-Sim">
@@ -98,7 +125,7 @@
         </svg>
         <span>WI-FI</span>
       </a>
-      <a href="/#support" aria-label="Support">
+      <a href="/support" aria-label="Support">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 12a8 8 0 0 1 16 0v4a2 2 0 0 1-2 2h-2"></path>
           <path d="M6 13v3a2 2 0 0 0 2 2"></path>
@@ -118,9 +145,12 @@
       <a class="header-action" href="/login">Login</a>
     }
   </header>
+  }
 
   @RenderBody()
 
+  @if (ViewData["SupportChrome"] as bool? != true)
+  {
   <footer class="site-footer">
     <span>El-Sim</span>
     <div class="language-switch" aria-label="Language">
@@ -131,6 +161,7 @@
     <span>Elsim &copy; 2026</span>
     <span>Baku, Azerbaijan</span>
   </footer>
+  }
 </body>
 
 </html>

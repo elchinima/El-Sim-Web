@@ -84,6 +84,11 @@ app.MapControllerRoute(
     defaults: new { controller = "Home", action = "Wifi" });
 
 app.MapControllerRoute(
+    name: "support-html",
+    pattern: "support.html",
+    defaults: new { controller = "Home", action = "Support" });
+
+app.MapControllerRoute(
     name: "activation-html",
     pattern: "activation.html",
     defaults: new { controller = "Home", action = "Activation" });

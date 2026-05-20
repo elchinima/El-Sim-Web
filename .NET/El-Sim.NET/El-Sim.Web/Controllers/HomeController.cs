@@ -62,6 +62,11 @@ namespace El_Sim.Web.Controllers
             return View(await BuildCategoryPageWithRate("wifi", await GetProducts("wifi")));
         }
 
+        public IActionResult Support()
+        {
+            return View();
+        }
+
         [Authorize]
         public async Task<IActionResult> Activation()
         {
