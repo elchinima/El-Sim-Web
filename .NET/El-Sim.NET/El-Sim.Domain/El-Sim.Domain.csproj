@@ -7,4 +7,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Update="Entities\*.cs" />
+    <Compile Update="PhoneNumbers\*.cs" />
+  </ItemGroup>
+
 </Project>

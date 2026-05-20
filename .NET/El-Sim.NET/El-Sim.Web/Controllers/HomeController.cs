@@ -6,7 +6,7 @@ namespace El_Sim.Web.Controllers
         private readonly ProfileImageProcessor _profileImageProcessor;
         private readonly EmailSender _emailSender;
         private readonly IWebHostEnvironment _environment;
-        private readonly ExchangeRateService _exchangeRateService;
+        private readonly IExchangeRateService _exchangeRateService;
         private readonly ProductPricingService _productPricingService;
         private readonly PhoneNumberService _phoneNumberService;
         private readonly StripePaymentService _stripePaymentService;
@@ -16,7 +16,7 @@ namespace El_Sim.Web.Controllers
             ProfileImageProcessor profileImageProcessor,
             EmailSender emailSender,
             IWebHostEnvironment environment,
-            ExchangeRateService exchangeRateService,
+            IExchangeRateService exchangeRateService,
             ProductPricingService productPricingService,
             PhoneNumberService phoneNumberService,
             StripePaymentService stripePaymentService)

@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\El-Sim.Domain\El-Sim.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

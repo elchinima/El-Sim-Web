@@ -20,11 +20,11 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Stripe.net" Version="51.1.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\El-Sim.Infrastucture\El-Sim.Infrastucture.csproj" />
+    <ProjectReference Include="..\El-Sim.Application\El-Sim.Application.csproj" />
+    <ProjectReference Include="..\El-Sim.Infrastructure\El-Sim.Infrastructure.csproj" />
     <ProjectReference Include="..\El-Sim.Persistence\El-Sim.Persistence.csproj" />
   </ItemGroup>
 

@@ -20,7 +20,7 @@ builder.Services.AddScoped<PurchaseDataInitializer>();
 builder.Services.AddScoped<ProductPricingService>();
 builder.Services.AddScoped<PhoneNumberService>();
 builder.Services.AddScoped<StripePaymentService>();
-builder.Services.AddHttpClient<ExchangeRateService>();
+builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
 builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
