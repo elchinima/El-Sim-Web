@@ -162,6 +162,8 @@ public class AdminSliderListViewModel
 {
     public List<HomeSliderViewModel> DesktopSliders { get; set; } = [];
     public List<HomeSliderViewModel> MobileSliders { get; set; } = [];
+    public string FilterDevice { get; set; } = "all";
+    public string FilterLanguage { get; set; } = "all";
 }
 
 public class AdminSliderUpdateViewModel

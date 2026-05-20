@@ -71,12 +71,14 @@ public class AdminController : Controller
         return View(await BuildProductEditorWithSettings(metadata, await GetAdminProducts(metadata.Key)));
     }
 
-    public async Task<IActionResult> Sliders()
+    public async Task<IActionResult> Sliders(string? device, string? language)
     {
         return View(new AdminSliderListViewModel
         {
             DesktopSliders = await GetAdminSliders(false),
-            MobileSliders = await GetAdminSliders(true)
+            MobileSliders = await GetAdminSliders(true),
+            FilterDevice = NormalizeSliderDevice(device),
+            FilterLanguage = NormalizeSliderFilterLanguage(language)
         });
     }
 
@@ -217,55 +219,103 @@ public class AdminController : Controller
         return RedirectToAction(nameof(ProductCategory), new { id = metadata.Key });
     }
 
-    public async Task<IActionResult> Purchases(string? search)
+    public async Task<IActionResult> Purchases(int? userId, string? search)
     {
         var normalizedSearch = search?.Trim() ?? string.Empty;
-        var query = _dbContext.ProductPurchases
+        var usersQuery = _dbContext.Users
             .AsNoTracking()
-            .Include(item => item.User)
-            .AsQueryable();
+            .Where(user => user.ProductPurchases.Any() && user.PaymentReceipts.Any(receipt => receipt.ProductPurchaseId != null));
 
-        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        if (!userId.HasValue && !string.IsNullOrWhiteSpace(normalizedSearch))
         {
-            query = query.Where(item =>
-                item.ProductName.Contains(normalizedSearch) ||
-                item.Category.Contains(normalizedSearch) ||
-                (item.User != null && (item.User.Name.Contains(normalizedSearch) || item.User.Fin.Contains(normalizedSearch))));
+            usersQuery = usersQuery.Where(user =>
+                user.Name.Contains(normalizedSearch) ||
+                user.Fin.Contains(normalizedSearch) ||
+                (user.Account.Email != null && user.Account.Email.Contains(normalizedSearch)));
         }
 
-        var purchases = await query
-            .OrderByDescending(item => item.CreatedAtUtc)
+        var users = await usersQuery
+            .OrderByDescending(user => user.PaymentReceipts.Max(receipt => receipt.CreatedAtUtc))
             .Take(200)
-            .Select(item => new AdminPurchaseRowViewModel
+            .Select(user => new AdminPurchaseUserViewModel
             {
-                Id = item.Id,
-                UserName = item.User != null ? item.User.Name : string.Empty,
-                UserFin = item.User != null ? item.User.Fin : string.Empty,
-                Category = item.Category,
-                ProductName = item.ProductName,
-                ProductCurrency = item.ProductCurrency,
-                ProductAmount = item.ProductAmount,
-                TotalAzn = item.TotalAzn,
-                ExchangeRate = item.ExchangeRate,
-                CommissionRate = item.CommissionRate,
-                HasStaticIp = item.HasStaticIp,
-                StaticIpRate = item.StaticIpRate,
-                StaticIpFeeAzn = item.StaticIpFeeAzn,
-                Status = item.Status,
-                CreatedAtUtc = item.CreatedAtUtc
+                Id = user.Id,
+                Name = user.Name,
+                Fin = user.Fin,
+                Email = user.Account.Email ?? string.Empty,
+                PurchaseCount = user.ProductPurchases.Count,
+                ReceiptCount = user.PaymentReceipts.Count(receipt => receipt.ProductPurchaseId != null),
+                LastReceiptAtUtc = user.PaymentReceipts.Max(receipt => receipt.CreatedAtUtc)
             })
             .ToListAsync();
+
+        var purchases = new List<AdminPurchaseRowViewModel>();
+
+        if (userId.HasValue)
+        {
+            var query = _dbContext.ProductPurchases
+                .AsNoTracking()
+                .Include(item => item.User)
+                .Where(item => item.UserId == userId.Value && item.Receipts.Any())
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(normalizedSearch))
+            {
+                query = query.Where(item =>
+                    item.ProductName.Contains(normalizedSearch) ||
+                    item.Category.Contains(normalizedSearch) ||
+                    item.Status.Contains(normalizedSearch) ||
+                    item.Receipts.Any(receipt => receipt.ReceiptNumber.Contains(normalizedSearch) || receipt.Type.Contains(normalizedSearch) || receipt.Status.Contains(normalizedSearch)));
+            }
+
+            purchases = await query
+                .OrderByDescending(item => item.CreatedAtUtc)
+                .Take(200)
+                .Select(item => new AdminPurchaseRowViewModel
+                {
+                    Id = item.Id,
+                    ReceiptNumber = item.Receipts
+                        .OrderByDescending(receipt => receipt.CreatedAtUtc)
+                        .Select(receipt => receipt.ReceiptNumber)
+                        .FirstOrDefault() ?? string.Empty,
+                    ReceiptType = item.Receipts
+                        .OrderByDescending(receipt => receipt.CreatedAtUtc)
+                        .Select(receipt => receipt.Type)
+                        .FirstOrDefault() ?? string.Empty,
+                    ReceiptStatus = item.Receipts
+                        .OrderByDescending(receipt => receipt.CreatedAtUtc)
+                        .Select(receipt => receipt.Status)
+                        .FirstOrDefault() ?? string.Empty,
+                    UserName = item.User != null ? item.User.Name : string.Empty,
+                    UserFin = item.User != null ? item.User.Fin : string.Empty,
+                    Category = item.Category,
+                    ProductName = item.ProductName,
+                    ProductCurrency = item.ProductCurrency,
+                    ProductAmount = item.ProductAmount,
+                    TotalAzn = item.TotalAzn,
+                    ExchangeRate = item.ExchangeRate,
+                    CommissionRate = item.CommissionRate,
+                    HasStaticIp = item.HasStaticIp,
+                    StaticIpRate = item.StaticIpRate,
+                    StaticIpFeeAzn = item.StaticIpFeeAzn,
+                    Status = item.Status,
+                    CreatedAtUtc = item.CreatedAtUtc
+                })
+                .ToListAsync();
+        }
 
         return View(new AdminPurchasesViewModel
         {
             SearchQuery = normalizedSearch,
+            SelectedUserId = userId,
+            Users = users,
             Purchases = purchases
         });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CancelPurchase(int id, string? search)
+    public async Task<IActionResult> CancelPurchase(int id, int? userId, string? search)
     {
         var purchase = await _dbContext.ProductPurchases
             .Include(item => item.User)
@@ -284,12 +334,12 @@ public class AdminController : Controller
             TempData["AdminMessage"] = "Purchase cancelled.";
         }
 
-        return RedirectToAction(nameof(Purchases), new { search });
+        return RedirectToAction(nameof(Purchases), new { userId, search });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> RefundPurchase(int id, string? search)
+    public async Task<IActionResult> RefundPurchase(int id, int? userId, string? search)
     {
         var purchase = await _dbContext.ProductPurchases
             .Include(item => item.User)
@@ -324,7 +374,7 @@ public class AdminController : Controller
             TempData["AdminMessage"] = "Purchase refunded.";
         }
 
-        return RedirectToAction(nameof(Purchases), new { search });
+        return RedirectToAction(nameof(Purchases), new { userId, search });
     }
 
     [HttpPost]
@@ -932,6 +982,27 @@ public class AdminController : Controller
             "ru" => "ru",
             "az" => "az",
             _ => "en"
+        };
+    }
+
+    private static string NormalizeSliderFilterLanguage(string? language)
+    {
+        return language?.Trim().ToLowerInvariant() switch
+        {
+            "ru" => "ru",
+            "az" => "az",
+            "en" => "en",
+            _ => "all"
+        };
+    }
+
+    private static string NormalizeSliderDevice(string? device)
+    {
+        return device?.Trim().ToLowerInvariant() switch
+        {
+            "desktop" => "desktop",
+            "mobile" => "mobile",
+            _ => "all"
         };
     }
 

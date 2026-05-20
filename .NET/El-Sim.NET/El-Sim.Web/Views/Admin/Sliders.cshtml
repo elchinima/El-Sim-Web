@@ -13,6 +13,11 @@
     var canUploadAny = sliderLanguages.Any(language =>
         Model.DesktopSliders.Count(slider => slider.Language == language) < 6 ||
         Model.MobileSliders.Count(slider => slider.Language == language) < 6);
+    var visibleLanguages = Model.FilterLanguage == "all"
+        ? sliderLanguages
+        : sliderLanguages.Where(language => language == Model.FilterLanguage).ToArray();
+    var showDesktop = Model.FilterDevice is "all" or "desktop";
+    var showMobile = Model.FilterDevice is "all" or "mobile";
 }
 
 <main class="admin-shell">
@@ -22,7 +27,7 @@
       <h1 id="admin-sliders-title">Sliders</h1>
       <p>Upload desktop and mobile carousel images for the home page.</p>
     </div>
-    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+    <a class="button button-secondary" href="/admin/dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Z"></path><path d="M14 20h6V4h-6v16Z"></path><path d="M4 20h6v-3H4v3Z"></path></svg><span class="button-text">Dashboard</span></a>
   </section>
 
   @if (TempData["AdminMessage"] is string adminMessage)
@@ -72,19 +77,53 @@
         <input name="isMobile" type="checkbox" value="true">
         <span>Mobile 3:4</span>
       </label>
-      <button class="button button-secondary" type="button" data-clear-file>Clear field</button>
-      <button class="button button-primary" type="submit" @(canUploadAny ? "" : "disabled")>Upload</button>
+      <button class="button button-secondary" type="button" data-clear-file><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg><span class="button-text">Clear field</span></button>
+      <button class="button button-primary" type="submit" @(canUploadAny ? "" : "disabled")><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M4 20h16"></path></svg><span class="button-text">Upload</span></button>
+    </form>
+  </section>
+
+  <section class="admin-panel admin-slider-panel" aria-label="Slider filters">
+    <div class="admin-panel-head">
+      <div>
+        <p class="eyebrow">filters</p>
+        <h2>Filter sliders</h2>
+      </div>
+    </div>
+    <form class="admin-search" method="get" asp-action="Sliders">
+      <div class="field">
+        <label for="device">Version</label>
+        <select id="device" name="device">
+          <option value="all" selected="@(Model.FilterDevice == "all")">All versions</option>
+          <option value="desktop" selected="@(Model.FilterDevice == "desktop")">Desktop</option>
+          <option value="mobile" selected="@(Model.FilterDevice == "mobile")">Mobile</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="filter-language">Language</label>
+        <select id="filter-language" name="language">
+          <option value="all" selected="@(Model.FilterLanguage == "all")">All languages</option>
+          <option value="en" selected="@(Model.FilterLanguage == "en")">English</option>
+          <option value="ru" selected="@(Model.FilterLanguage == "ru")">Russian</option>
+          <option value="az" selected="@(Model.FilterLanguage == "az")">Azerbaijani</option>
+        </select>
+      </div>
+      <div class="admin-filter-actions">
+        <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18"></path><path d="M6 12h12"></path><path d="M10 19h4"></path></svg><span class="button-text">Filter</span></button>
+        <a class="button button-secondary" href="/admin/sliders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6"></path><path d="M20 20v-6h-6"></path><path d="M20 9A8 8 0 0 0 6 5.5L4 10"></path><path d="M4 15a8 8 0 0 0 14 3.5L20 14"></path></svg><span class="button-text">Clear</span></a>
+      </div>
     </form>
   </section>
 
   <form method="post" asp-action="UpdateSliders" class="admin-product-form" data-confirm-message="Save slider changes?" data-confirm-button="Save">
     @Html.AntiForgeryToken()
 
-    @foreach (var language in sliderLanguages)
+    @foreach (var language in visibleLanguages)
     {
       var desktopCount = Model.DesktopSliders.Count(slider => slider.Language == language);
       var mobileCount = Model.MobileSliders.Count(slider => slider.Language == language);
 
+      @if (showDesktop)
+      {
       <section class="admin-panel admin-slider-panel" aria-label="@sliderLanguageNames[language] desktop sliders">
         <div class="admin-panel-head">
           <div>
@@ -121,14 +160,17 @@
                 </div>
               </div>
               <div class="admin-slider-row-actions">
-                <button class="button button-secondary" type="button" data-product-modal-open="update-slider-@Model.DesktopSliders[index].Id">Update</button>
-                <button class="button button-danger" type="submit" form="delete-slider-@Model.DesktopSliders[index].Id">Delete</button>
+                <button class="button button-secondary" type="button" data-product-modal-open="update-slider-@Model.DesktopSliders[index].Id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M4 20h16"></path></svg><span class="button-text">Update</span></button>
+                <button class="button button-danger" type="submit" form="delete-slider-@Model.DesktopSliders[index].Id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg><span class="button-text">Delete</span></button>
               </div>
             </article>
           }
         </div>
       </section>
+      }
 
+      @if (showMobile)
+      {
       <section class="admin-panel admin-slider-panel" aria-label="@sliderLanguageNames[language] mobile sliders">
         <div class="admin-panel-head">
           <div>
@@ -165,17 +207,18 @@
                 </div>
               </div>
               <div class="admin-slider-row-actions">
-                <button class="button button-secondary" type="button" data-product-modal-open="update-slider-@Model.MobileSliders[index].Id">Update</button>
-                <button class="button button-danger" type="submit" form="delete-slider-@Model.MobileSliders[index].Id">Delete</button>
+                <button class="button button-secondary" type="button" data-product-modal-open="update-slider-@Model.MobileSliders[index].Id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M4 20h16"></path></svg><span class="button-text">Update</span></button>
+                <button class="button button-danger" type="submit" form="delete-slider-@Model.MobileSliders[index].Id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg><span class="button-text">Delete</span></button>
               </div>
             </article>
           }
         </div>
       </section>
+      }
     }
 
     <div class="admin-sticky-actions">
-      <button class="button button-primary" type="submit">Save sliders</button>
+      <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg><span class="button-text">Save sliders</span></button>
     </div>
   </form>
 
@@ -193,7 +236,7 @@
             <p class="eyebrow">@slider.Language.ToUpperInvariant() @(slider.IsMobile ? "mobile" : "desktop")</p>
             <h2>Update slider</h2>
           </div>
-          <button class="button button-secondary" type="button" data-product-modal-close>Close</button>
+          <button class="button button-secondary" type="button" data-product-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg><span class="button-text">Close</span></button>
         </div>
 
         <div class="admin-slider-update-grid">
@@ -210,8 +253,8 @@
         </div>
 
         <div class="admin-slider-modal-actions">
-          <button class="button button-secondary" type="button" data-clear-file>Clear field</button>
-          <button class="button button-primary" type="submit">Update</button>
+          <button class="button button-secondary" type="button" data-clear-file><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg><span class="button-text">Clear field</span></button>
+          <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M4 20h16"></path></svg><span class="button-text">Update</span></button>
         </div>
       </form>
     </dialog>

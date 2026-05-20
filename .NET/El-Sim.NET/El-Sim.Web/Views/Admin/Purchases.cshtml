@@ -3,6 +3,7 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Purchases - El-Sim Admin";
+    var selectedUser = Model.Users.FirstOrDefault(user => user.Id == Model.SelectedUserId);
 }
 
 <main class="admin-shell">
@@ -12,7 +13,7 @@
       <h1 id="admin-purchases-title">Purchases</h1>
       <p>Review user purchases, cancel active products, and return funds to user balance.</p>
     </div>
-    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+    <a class="button button-secondary" href="/admin/dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Z"></path><path d="M14 20h6V4h-6v16Z"></path><path d="M4 20h6v-3H4v3Z"></path></svg><span class="button-text">Dashboard</span></a>
   </section>
 
   @if (TempData["AdminMessage"] is string adminMessage)
@@ -26,62 +27,107 @@
         <p class="eyebrow">purchase history</p>
         <h2>All purchases</h2>
       </div>
-      <span>@Model.Purchases.Count records</span>
+      <span>@(Model.SelectedUserId.HasValue ? $"{Model.Purchases.Count} records" : $"{Model.Users.Count} users")</span>
     </div>
 
     <form class="admin-search" method="get" asp-action="Purchases">
+      @if (Model.SelectedUserId.HasValue)
+      {
+        <input type="hidden" name="userId" value="@Model.SelectedUserId">
+      }
       <div class="field">
-        <label for="admin-purchase-search">Search purchase</label>
-        <input id="admin-purchase-search" name="search" value="@Model.SearchQuery" placeholder="User, FIN, category or product">
+        <label for="admin-purchase-search">@(Model.SelectedUserId.HasValue ? "Search receipt" : "Search user")</label>
+        <input id="admin-purchase-search" name="search" value="@Model.SearchQuery" placeholder="@(Model.SelectedUserId.HasValue ? "Receipt, status, category or product" : "Name, FIN or email")">
       </div>
-      <button class="button button-primary" type="submit">Search</button>
+      <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span class="button-text">Search</span></button>
       @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
       {
-        <a class="button button-secondary" href="/admin/purchases">Clear</a>
+        <a class="button button-secondary" href="@(Model.SelectedUserId.HasValue ? $"/admin/purchases?userId={Model.SelectedUserId}" : "/admin/purchases")"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6"></path><path d="M20 20v-6h-6"></path><path d="M20 9A8 8 0 0 0 6 5.5L4 10"></path><path d="M4 15a8 8 0 0 0 14 3.5L20 14"></path></svg><span class="button-text">Clear</span></a>
       }
     </form>
 
+    @if (Model.SelectedUserId.HasValue)
+    {
+      <div class="admin-panel-head">
+        <div>
+          <p class="eyebrow">selected user</p>
+          <h2>@(selectedUser?.Name ?? "User")</h2>
+          @if (selectedUser is not null)
+          {
+            <span>@selectedUser.Fin | @selectedUser.Email</span>
+          }
+        </div>
+        <a class="button button-secondary" href="/admin/purchases"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5"></path><path d="m12 19-7-7 7-7"></path></svg><span class="button-text">Users</span></a>
+      </div>
+    }
+
     <div class="admin-users">
-      @foreach (var purchase in Model.Purchases)
+      @if (!Model.SelectedUserId.HasValue)
       {
-        <article class="admin-user-card">
-          <div class="admin-user-main">
-            <div>
-              <h3>@purchase.ProductName</h3>
-              <p>@purchase.Category | @purchase.ProductAmount.ToString("F2", CultureInfo.InvariantCulture) @purchase.ProductCurrency | @purchase.TotalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</p>
-              <p>@purchase.UserName | @purchase.UserFin | @purchase.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yy HH:mm", CultureInfo.InvariantCulture)</p>
-              @if (purchase.ExchangeRate.HasValue)
+        @foreach (var user in Model.Users)
+        {
+          <a class="admin-user-card admin-purchase-user-card" asp-action="Purchases" asp-route-userId="@user.Id">
+            <div class="admin-user-main">
+              <div>
+                <h3>@user.Name</h3>
+                <p>@user.Fin | @user.Email</p>
+                <p>Last receipt @user.LastReceiptAtUtc.ToLocalTime().ToString("dd.MM.yy HH:mm", CultureInfo.InvariantCulture)</p>
+              </div>
+            </div>
+            <div class="admin-flags">
+              <span class="is-on">@user.PurchaseCount purchases</span>
+              <span>@user.ReceiptCount receipts</span>
+            </div>
+            <div class="admin-actions">
+              <span class="button button-secondary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6"></path></svg><span class="button-text">Open</span></span>
+            </div>
+          </a>
+        }
+      }
+      else
+      {
+        @foreach (var purchase in Model.Purchases)
+        {
+          <article class="admin-user-card">
+            <div class="admin-user-main">
+              <div>
+                <h3>@purchase.ProductName</h3>
+                <p>@purchase.ReceiptNumber | @purchase.ReceiptType | @purchase.ReceiptStatus</p>
+                <p>@purchase.Category | @purchase.ProductAmount.ToString("F2", CultureInfo.InvariantCulture) @purchase.ProductCurrency | @purchase.TotalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</p>
+                <p>@purchase.UserName | @purchase.UserFin | @purchase.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yy HH:mm", CultureInfo.InvariantCulture)</p>
+                @if (purchase.ExchangeRate.HasValue)
+                {
+                  <p>USD @purchase.ExchangeRate.Value.ToString("F4", CultureInfo.InvariantCulture) + @((purchase.CommissionRate * 100m).ToString("F0", CultureInfo.InvariantCulture))%</p>
+                }
+                @if (purchase.HasStaticIp)
+                {
+                  <p>Static IP +@((purchase.StaticIpRate * 100m).ToString("0.##", CultureInfo.InvariantCulture))% | @purchase.StaticIpFeeAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</p>
+                }
+              </div>
+            </div>
+
+            <div class="admin-flags">
+              <span class="@(purchase.Status == "Active" ? "is-on" : purchase.Status == "Refunded" ? "is-danger" : "")">@purchase.Status</span>
+            </div>
+
+            <div class="admin-actions">
+              @if (purchase.Status == "Active")
               {
-                <p>USD @purchase.ExchangeRate.Value.ToString("F4", CultureInfo.InvariantCulture) + @((purchase.CommissionRate * 100m).ToString("F0", CultureInfo.InvariantCulture))%</p>
+                <form id="admin-cancel-purchase-@purchase.Id" method="post" asp-action="CancelPurchase" asp-route-id="@purchase.Id" asp-route-userId="@Model.SelectedUserId" asp-route-search="@Model.SearchQuery">
+                  @Html.AntiForgeryToken()
+                  <button class="button button-secondary" type="button" data-open-confirm-form="admin-cancel-purchase-@purchase.Id" data-confirm-title="Cancel purchase" data-confirm-message="Cancel this purchase without refund?" data-confirm-button="Cancel purchase"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg><span class="button-text">Cancel</span></button>
+                </form>
               }
-              @if (purchase.HasStaticIp)
+              @if (purchase.Status != "Refunded")
               {
-                <p>Static IP +@((purchase.StaticIpRate * 100m).ToString("0.##", CultureInfo.InvariantCulture))% | @purchase.StaticIpFeeAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</p>
+                <form id="admin-refund-purchase-@purchase.Id" method="post" asp-action="RefundPurchase" asp-route-id="@purchase.Id" asp-route-userId="@Model.SelectedUserId" asp-route-search="@Model.SearchQuery">
+                  @Html.AntiForgeryToken()
+                  <button class="button button-danger" type="button" data-open-confirm-form="admin-refund-purchase-@purchase.Id" data-confirm-title="Refund purchase" data-confirm-message="Refund this purchase to the user balance?" data-confirm-button="Refund"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h12a6 6 0 1 1 0 12H9"></path><path d="m7 11-4-4 4-4"></path></svg><span class="button-text">Refund</span></button>
+                </form>
               }
             </div>
-          </div>
-
-          <div class="admin-flags">
-            <span class="@(purchase.Status == "Active" ? "is-on" : purchase.Status == "Refunded" ? "is-danger" : "")">@purchase.Status</span>
-          </div>
-
-          <div class="admin-actions">
-            @if (purchase.Status == "Active")
-            {
-              <form id="admin-cancel-purchase-@purchase.Id" method="post" asp-action="CancelPurchase" asp-route-id="@purchase.Id" asp-route-search="@Model.SearchQuery">
-                @Html.AntiForgeryToken()
-                <button class="button button-secondary" type="button" data-open-confirm-form="admin-cancel-purchase-@purchase.Id" data-confirm-title="Cancel purchase" data-confirm-message="Cancel this purchase without refund?" data-confirm-button="Cancel purchase">Cancel</button>
-              </form>
-            }
-            @if (purchase.Status != "Refunded")
-            {
-              <form id="admin-refund-purchase-@purchase.Id" method="post" asp-action="RefundPurchase" asp-route-id="@purchase.Id" asp-route-search="@Model.SearchQuery">
-                @Html.AntiForgeryToken()
-                <button class="button button-danger" type="button" data-open-confirm-form="admin-refund-purchase-@purchase.Id" data-confirm-title="Refund purchase" data-confirm-message="Refund this purchase to the user balance?" data-confirm-button="Refund">Refund</button>
-              </form>
-            }
-          </div>
-        </article>
+          </article>
+        }
       }
     </div>
   </section>
@@ -91,8 +137,8 @@
       <h2 data-confirm-title>Confirm action?</h2>
       <p data-confirm-text></p>
       <div class="profile-confirm-actions">
-        <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel>Cancel</button>
-        <button class="button button-primary" type="button" value="confirm" data-confirm-submit>Confirm</button>
+        <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg><span class="button-text">Cancel</span></button>
+        <button class="button button-primary" type="button" value="confirm" data-confirm-submit><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg><span class="button-text">Confirm</span></button>
       </div>
     </form>
   </dialog>

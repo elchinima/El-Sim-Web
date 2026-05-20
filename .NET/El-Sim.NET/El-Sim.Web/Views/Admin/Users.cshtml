@@ -12,7 +12,7 @@
       <h1 id="admin-users-title">Users</h1>
       <p>Manage account access and two-factor security.</p>
     </div>
-    <a class="button button-secondary" href="/admin/dashboard">Dashboard</a>
+    <a class="button button-secondary" href="/admin/dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Z"></path><path d="M14 20h6V4h-6v16Z"></path><path d="M4 20h6v-3H4v3Z"></path></svg><span class="button-text">Dashboard</span></a>
   </section>
 
   @if (TempData["AdminError"] is string adminError)
@@ -34,10 +34,10 @@
         <label for="admin-user-search">Search user</label>
         <input id="admin-user-search" name="search" value="@Model.SearchQuery" placeholder="Name, FIN or email">
       </div>
-      <button class="button button-primary" type="submit">Search</button>
+      <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span class="button-text">Search</span></button>
       @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
       {
-        <a class="button button-secondary" href="/admin/users">Clear</a>
+        <a class="button button-secondary" href="/admin/users"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6"></path><path d="M20 20v-6h-6"></path><path d="M20 9A8 8 0 0 0 6 5.5L4 10"></path><path d="M4 15a8 8 0 0 0 14 3.5L20 14"></path></svg><span class="button-text">Clear</span></a>
       }
     </form>
 
@@ -76,11 +76,11 @@
           <div class="admin-actions">
             <form id="admin-2fa-@user.Id" method="post" asp-action="ToggleTwoFactor" asp-route-id="@user.Id" asp-route-search="@Model.SearchQuery">
               @Html.AntiForgeryToken()
-              <button class="button button-secondary" type="button" data-open-confirm-form="admin-2fa-@user.Id" data-confirm-title="Confirm 2FA change" data-confirm-message="@(user.IsTwoFactorEnabled ? "Disable 2FA for this user?" : "Enable 2FA for this user?")" data-confirm-button="Confirm">@(user.IsTwoFactorEnabled ? "Disable 2FA" : "Enable 2FA")</button>
+              <button class="button button-secondary" type="button" data-open-confirm-form="admin-2fa-@user.Id" data-confirm-title="Confirm 2FA change" data-confirm-message="@(user.IsTwoFactorEnabled ? "Disable 2FA for this user?" : "Enable 2FA for this user?")" data-confirm-button="Confirm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"></path><path d="M9 12l2 2 4-4"></path></svg><span class="button-text">@(user.IsTwoFactorEnabled ? "Disable 2FA" : "Enable 2FA")</span></button>
             </form>
             <form id="admin-block-@user.Id" method="post" asp-action="ToggleBlock" asp-route-id="@user.Id" asp-route-search="@Model.SearchQuery">
               @Html.AntiForgeryToken()
-              <button class="button @(user.IsBlocked ? "button-secondary" : "button-danger")" type="button" data-open-confirm-form="admin-block-@user.Id" data-confirm-title="Confirm user access" data-confirm-message="@(user.IsBlocked ? "Unblock this user?" : "Block this user?")" data-confirm-button="@(user.IsBlocked ? "Unblock" : "Block")">@(user.IsBlocked ? "Unblock" : "Block")</button>
+              <button class="button @(user.IsBlocked ? "button-secondary" : "button-danger")" type="button" data-open-confirm-form="admin-block-@user.Id" data-confirm-title="Confirm user access" data-confirm-message="@(user.IsBlocked ? "Unblock this user?" : "Block this user?")" data-confirm-button="@(user.IsBlocked ? "Unblock" : "Block")"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 11V8A6 6 0 0 0 6 8v3"></path><rect x="4" y="11" width="16" height="10" rx="2"></rect></svg><span class="button-text">@(user.IsBlocked ? "Unblock" : "Block")</span></button>
             </form>
           </div>
         </article>
@@ -93,8 +93,8 @@
       <h2 data-confirm-title>Confirm action?</h2>
       <p data-confirm-text></p>
       <div class="profile-confirm-actions">
-        <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel>Cancel</button>
-        <button class="button button-primary" type="button" value="confirm" data-confirm-submit>Confirm</button>
+        <button class="button button-secondary" type="button" value="cancel" data-confirm-cancel><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg><span class="button-text">Cancel</span></button>
+        <button class="button button-primary" type="button" value="confirm" data-confirm-submit><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg><span class="button-text">Confirm</span></button>
       </div>
     </form>
   </dialog>

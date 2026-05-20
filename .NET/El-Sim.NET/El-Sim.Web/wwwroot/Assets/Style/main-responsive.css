@@ -134,13 +134,15 @@
     }
 
     .admin-nav-links {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: nowrap;
     }
 
     .admin-nav-links a,
     .admin-exit {
-        width: 100%;
+        width: auto;
+        min-width: 44px;
+        flex: 0 0 44px;
     }
 
     .admin-nav-links span,
@@ -180,6 +182,7 @@
     }
 
     .admin-search,
+    .admin-filter-actions,
     .admin-products-editor,
     .admin-product-fields,
     .admin-slider-upload-form,
@@ -250,10 +253,17 @@
 
     .admin-nav-links a,
     .admin-exit {
-        min-width: 0;
+        min-width: 42px;
+        flex-basis: 42px;
         min-height: 36px;
         padding: 0 10px;
         font-size: 13px;
+    }
+
+    .admin-nav-links svg,
+    .admin-exit svg {
+        width: 18px;
+        height: 18px;
     }
 
     .header-action {
@@ -396,9 +406,40 @@
     }
 
     .admin-stats,
-    .admin-actions,
     .admin-chart-row {
         grid-template-columns: 1fr;
+    }
+
+    .admin-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-product-row-actions,
+    .admin-slider-row-actions,
+    .admin-slider-modal-actions,
+    .admin-slider-upload-form,
+    .profile-confirm-actions,
+    .admin-hero-actions,
+    .admin-filter-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .admin-product-row-actions .button,
+    .admin-slider-row-actions .button,
+    .admin-slider-modal-actions .button,
+    .admin-slider-upload-form .button,
+    .profile-confirm-actions .button,
+    .admin-hero-actions .button,
+    .admin-filter-actions .button {
+        width: 100%;
+    }
+
+    .admin-slider-file-field,
+    .admin-slider-upload-form .field:not(.admin-slider-file-field),
+    .admin-slider-type-toggle {
+        grid-column: 1 / -1;
     }
 
     .admin-chart-row strong {
@@ -414,6 +455,20 @@
     .admin-sticky-actions {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .admin-body .button .button-text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
+
+    .admin-body .button {
+        min-width: 44px;
+        padding-inline: 12px;
     }
 
     .admin-product-modal-box {

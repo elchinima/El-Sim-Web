@@ -15,9 +15,9 @@
     <div class="admin-hero-actions">
       <form method="post" asp-action="AddProduct" asp-route-category="@Model.Category">
         @Html.AntiForgeryToken()
-        <button class="button button-primary" type="submit">Add product</button>
+        <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg><span class="button-text">Add product</span></button>
       </form>
-      <a class="button button-secondary" href="/admin/products">All products</a>
+      <a class="button button-secondary" href="/admin/products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg><span class="button-text">All products</span></a>
     </div>
   </section>
 
@@ -59,8 +59,8 @@
             </label>
           </div>
           <div class="admin-product-row-actions">
-            <button class="button button-secondary" type="button" data-product-modal-open="product-modal-@Model.Products[index].Id">Details</button>
-            <button class="button button-danger" type="submit" form="delete-product-@Model.Products[index].Id">Delete</button>
+            <button class="button button-secondary" type="button" data-product-modal-open="product-modal-@Model.Products[index].Id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"></path><path d="M14 2v6h6"></path><path d="M8 13h8"></path><path d="M8 17h8"></path></svg><span class="button-text">Details</span></button>
+            <button class="button button-danger" type="submit" form="delete-product-@Model.Products[index].Id"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="m19 6-1 14H6L5 6"></path></svg><span class="button-text">Delete</span></button>
           </div>
         </article>
 
@@ -71,7 +71,7 @@
                 <p class="eyebrow">product @(index + 1)</p>
                 <h2>@Model.Products[index].Name</h2>
               </div>
-              <button class="button button-secondary" type="button" data-product-modal-close>Close</button>
+              <button class="button button-secondary" type="button" data-product-modal-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg><span class="button-text">Close</span></button>
             </div>
 
             <div class="admin-product-fields">
@@ -263,7 +263,7 @@
     }
 
     <div class="admin-sticky-actions">
-      <button class="button button-primary" type="submit" name="saveProducts" value="true" data-save-products-button>Save products</button>
+      <button class="button button-primary" type="submit" name="saveProducts" value="true" data-save-products-button><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg><span class="button-text">Save products</span></button>
     </div>
   </form>
 

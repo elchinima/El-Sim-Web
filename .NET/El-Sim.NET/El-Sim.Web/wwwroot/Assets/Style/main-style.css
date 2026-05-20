@@ -417,8 +417,24 @@ h3 {
 }
 
 .button {
+    gap: 8px;
     padding: 0 24px;
     border: 1px solid transparent;
+}
+
+.button svg {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.button-icon {
+    display: inline-flex;
 }
 
 .button-primary {
@@ -1446,10 +1462,19 @@ input[type="checkbox"] {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
     padding: 5px;
     border: 1px solid var(--line);
     border-radius: 15px;
     background: rgba(0, 0, 0, 0.12);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.admin-nav-links::-webkit-scrollbar {
+    display: none;
 }
 
 .admin-nav-links a,
@@ -1479,6 +1504,7 @@ input[type="checkbox"] {
 
 .admin-nav-links a {
     min-width: 112px;
+    flex: 0 0 auto;
     padding: 0 16px;
     color: var(--muted);
     transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease, filter 0.2s ease;
@@ -1658,6 +1684,16 @@ input[type="checkbox"] {
     align-items: end;
     gap: 12px;
     margin-bottom: 20px;
+}
+
+.admin-filter-actions {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+}
+
+.admin-purchase-user-card {
+    color: inherit;
 }
 
 .admin-users {
