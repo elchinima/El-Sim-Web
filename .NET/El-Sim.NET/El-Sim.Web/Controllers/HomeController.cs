@@ -214,11 +214,35 @@ namespace El_Sim.Web.Controllers
                 ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
                 BalanceAzn = user.Account.BalanceAzn,
                 UserAssets = ToUserAssetsViewModel(user.UserAssets),
-                Purchases = await GetUserPurchases(user.Id),
-                Receipts = await GetUserReceipts(user.Id),
                 IsTwoFactorEnabled = user.Account.IsTwoFactorEnabled,
                 IsEmailNotificationsEnabled = user.Account.IsEmailNotificationsEnabled
             });
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Purchases()
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            return View(await GetUserPurchases(user.Id, null));
+        }
+
+        [Authorize]
+        public async Task<IActionResult> Receipts()
+        {
+            var user = await GetCurrentUser();
+
+            if (user is null)
+            {
+                return RedirectToAction(nameof(Login));
+            }
+
+            return View(await GetUserReceipts(user.Id, null));
         }
 
         [Authorize]
@@ -249,8 +273,6 @@ namespace El_Sim.Web.Controllers
                     ProfileImagePath = user.Account.ProfileImagePath ?? string.Empty,
                     BalanceAzn = user.Account.BalanceAzn,
                     UserAssets = ToUserAssetsViewModel(user.UserAssets),
-                    Purchases = await GetUserPurchases(user.Id),
-                    Receipts = await GetUserReceipts(user.Id),
                     IsTwoFactorEnabled = profile.IsTwoFactorEnabled,
                     IsEmailNotificationsEnabled = profile.IsEmailNotificationsEnabled
                 });
@@ -1029,13 +1051,12 @@ namespace El_Sim.Web.Controllers
             return viewModel.HasAnyValue ? viewModel : null;
         }
 
-        private async Task<List<UserPurchaseViewModel>> GetUserPurchases(int userId)
+        private async Task<List<UserPurchaseViewModel>> GetUserPurchases(int userId, int? take = 12)
         {
-            return await _dbContext.ProductPurchases
+            var query = _dbContext.ProductPurchases
                 .AsNoTracking()
                 .Where(item => item.UserId == userId)
                 .OrderByDescending(item => item.CreatedAtUtc)
-                .Take(12)
                 .Select(item => new UserPurchaseViewModel
                 {
                     Category = item.Category,
@@ -1043,17 +1064,22 @@ namespace El_Sim.Web.Controllers
                     Status = item.Status,
                     TotalAzn = item.TotalAzn,
                     CreatedAtUtc = item.CreatedAtUtc
-                })
-                .ToListAsync();
+                });
+
+            if (take.HasValue)
+            {
+                query = query.Take(take.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
-        private async Task<List<UserReceiptViewModel>> GetUserReceipts(int userId)
+        private async Task<List<UserReceiptViewModel>> GetUserReceipts(int userId, int? take = 12)
         {
-            return await _dbContext.PaymentReceipts
+            var query = _dbContext.PaymentReceipts
                 .AsNoTracking()
                 .Where(item => item.UserId == userId)
                 .OrderByDescending(item => item.CreatedAtUtc)
-                .Take(12)
                 .Select(item => new UserReceiptViewModel
                 {
                     ReceiptNumber = item.ReceiptNumber,
@@ -1061,8 +1087,14 @@ namespace El_Sim.Web.Controllers
                     Status = item.Status,
                     AmountAzn = item.AmountAzn,
                     CreatedAtUtc = item.CreatedAtUtc
-                })
-                .ToListAsync();
+                });
+
+            if (take.HasValue)
+            {
+                query = query.Take(take.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
         private static PaymentReceipt BuildReceipt(

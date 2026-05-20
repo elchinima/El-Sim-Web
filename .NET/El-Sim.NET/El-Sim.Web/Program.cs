@@ -99,6 +99,16 @@ app.MapControllerRoute(
     defaults: new { controller = "Home", action = "Profile" });
 
 app.MapControllerRoute(
+    name: "profile-purchases",
+    pattern: "profile/purchases",
+    defaults: new { controller = "Home", action = "Purchases" });
+
+app.MapControllerRoute(
+    name: "profile-receipts",
+    pattern: "profile/receipts",
+    defaults: new { controller = "Home", action = "Receipts" });
+
+app.MapControllerRoute(
     name: "wallet-topup-success",
     pattern: "wallet/topup/success",
     defaults: new { controller = "Home", action = "TopUpSuccess" });

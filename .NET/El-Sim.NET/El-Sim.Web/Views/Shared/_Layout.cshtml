@@ -1,3 +1,23 @@
+@inject ElSimDbContext DbContext
+@{
+  var headerPassTier = string.Empty;
+
+  if (User.Identity?.IsAuthenticated == true && int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var headerUserId))
+  {
+    var headerPassName = await DbContext.ProductPurchases
+      .AsNoTracking()
+      .Where(item => item.UserId == headerUserId && item.Category == "pass" && item.ProductType == "pass" && item.Status == "Active")
+      .OrderByDescending(item => item.CreatedAtUtc)
+      .Select(item => item.ProductName)
+      .FirstOrDefaultAsync();
+
+    headerPassTier = headerPassName?.Contains("Ultra", StringComparison.OrdinalIgnoreCase) == true
+      ? "Ultra"
+      : headerPassName?.Contains("Plus", StringComparison.OrdinalIgnoreCase) == true
+        ? "Plus"
+        : string.Empty;
+  }
+}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -91,7 +111,7 @@
 
     @if (User.Identity?.IsAuthenticated == true)
     {
-      <a class="header-action" href="/profile">@User.Identity.Name</a>
+      <a class="header-action" href="/profile">@User.Identity.Name@if (!string.IsNullOrWhiteSpace(headerPassTier)) { <span class="header-pass-divider">|</span> <span>@headerPassTier</span> }</a>
     }
     else
     {

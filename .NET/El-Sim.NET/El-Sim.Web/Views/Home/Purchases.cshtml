@@ -1,0 +1,41 @@
+@model List<UserPurchaseViewModel>
+
+@{
+    ViewData["Title"] = "Purchases - El-Sim";
+}
+
+<main class="profile-shell">
+  <section class="profile-panel" aria-label="Purchases">
+    <div class="profile-head">
+      <div>
+        <p class="eyebrow">user profile</p>
+        <h1>Purchases</h1>
+      </div>
+    </div>
+
+    @if (Model.Count > 0)
+    {
+      <section class="profile-assets profile-history-list" aria-label="Purchases">
+        @foreach (var purchase in Model)
+        {
+          <div class="profile-row">
+            <span>@purchase.Category | @purchase.Status | @purchase.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yy HH:mm", CultureInfo.InvariantCulture)</span>
+            <strong>@purchase.ProductName - @purchase.TotalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</strong>
+          </div>
+        }
+      </section>
+    }
+    else
+    {
+      <div class="profile-row">
+        <span>Purchases</span>
+        <strong>No purchases yet</strong>
+      </div>
+    }
+
+    <div class="profile-actions">
+      <a class="button button-primary" href="/profile">Profile</a>
+      <a class="button button-secondary" href="/profile/receipts">Receipts</a>
+    </div>
+  </section>
+</main>

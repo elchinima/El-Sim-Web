@@ -129,18 +129,23 @@
     }
 
     .admin-navbar {
-        grid-template-columns: 1fr;
+        grid-template-columns: auto minmax(0, 1fr) auto;
         justify-items: stretch;
     }
 
     .admin-nav-links {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 
     .admin-nav-links a,
     .admin-exit {
         width: 100%;
+    }
+
+    .admin-nav-links span,
+    .admin-exit span {
+        display: none;
     }
 
     .admin-exit {

@@ -154,36 +154,10 @@
       </div>
     }
 
-    @if (Model.Purchases.Count > 0)
-    {
-      <section class="profile-assets" aria-label="Purchases">
-        <h2>Purchases</h2>
-        @foreach (var purchase in Model.Purchases)
-        {
-          <div class="profile-row">
-            <span>@purchase.Category | @purchase.Status</span>
-            <strong>@purchase.ProductName - @purchase.TotalAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</strong>
-          </div>
-        }
-      </section>
-    }
-
-    @if (Model.Receipts.Count > 0)
-    {
-      <section class="profile-assets" aria-label="Receipts">
-        <h2>Receipts</h2>
-        @foreach (var receipt in Model.Receipts)
-        {
-          <div class="profile-row">
-            <span>@receipt.ReceiptNumber | @receipt.Type | @receipt.Status</span>
-            <strong>@receipt.AmountAzn.ToString("F2", CultureInfo.InvariantCulture) AZN</strong>
-          </div>
-        }
-      </section>
-    }
-
     <div class="profile-actions">
       <a class="button button-primary" href="/plans">Plans</a>
+      <a class="button button-secondary" href="/profile/purchases">Purchases</a>
+      <a class="button button-secondary" href="/profile/receipts">Receipts</a>
       <a class="button button-secondary" href="/logout">Logout</a>
     </div>
   </section>

@@ -21,23 +21,57 @@
 
     <nav class="admin-nav-links" aria-label="Admin navigation">
       <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "is-active" : "")" href="/admin/dashboard">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 13h6V4H4v9Z"></path>
+          <path d="M14 20h6V4h-6v16Z"></path>
+          <path d="M4 20h6v-3H4v3Z"></path>
+        </svg>
         <span>Dashboard</span>
       </a>
       <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Users" ? "is-active" : "")" href="/admin/users">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9.5" cy="7" r="4"></circle>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
         <span>Users</span>
       </a>
       <a class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Products" || ViewContext.RouteData.Values["action"]?.ToString() == "ProductCategory") ? "is-active" : "")" href="/admin/products">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+          <path d="M3 6h18"></path>
+          <path d="M16 10a4 4 0 0 1-8 0"></path>
+        </svg>
         <span>Products</span>
       </a>
       <a class="@(ViewContext.RouteData.Values["action"]?.ToString() == "Purchases" ? "is-active" : "")" href="/admin/purchases">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"></path>
+          <path d="M9 7h6"></path>
+          <path d="M9 11h6"></path>
+          <path d="M9 15h4"></path>
+        </svg>
         <span>Purchases</span>
       </a>
       <a class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Sliders") ? "is-active" : "")" href="/admin/sliders">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 5h16v14H4z"></path>
+          <path d="m4 15 4-4 4 4 2-2 6 6"></path>
+          <circle cx="15" cy="9" r="1.5"></circle>
+        </svg>
         <span>Sliders</span>
       </a>
     </nav>
 
-    <a class="admin-exit" href="/">Site</a>
+    <a class="admin-exit" href="/">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M3 12h13"></path>
+        <path d="m10 6 6 6-6 6"></path>
+        <path d="M21 4v16"></path>
+      </svg>
+      <span>Site</span>
+    </a>
   </header>
 
   @RenderBody()

@@ -292,7 +292,15 @@ Object.assign(translations.ru, {
     "Purchases": "\u041f\u043e\u043a\u0443\u043f\u043a\u0438",
     "Receipts": "\u0427\u0435\u043a\u0438",
     "Confirm action?": "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u0435?",
-    "Balance top-up": "\u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u0431\u0430\u043b\u0430\u043d\u0441\u0430"
+    "Balance top-up": "\u041f\u043e\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u0431\u0430\u043b\u0430\u043d\u0441\u0430",
+    "Profile": "\u041f\u0440\u043e\u0444\u0438\u043b\u044c",
+    "No purchases yet": "\u041f\u043e\u043a\u0443\u043f\u043e\u043a \u043f\u043e\u043a\u0430 \u043d\u0435\u0442",
+    "No receipts yet": "\u0427\u0435\u043a\u043e\u0432 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442",
+    "Dashboard": "\u041f\u0430\u043d\u0435\u043b\u044c",
+    "Users": "\u041f\u043e\u043b\u044c\u0437\u043e\u0432\u0430\u0442\u0435\u043b\u0438",
+    "Products": "\u041f\u0440\u043e\u0434\u0443\u043a\u0442\u044b",
+    "Sliders": "\u0421\u043b\u0430\u0439\u0434\u0435\u0440\u044b",
+    "Site": "\u0421\u0430\u0439\u0442"
 });
 
 Object.assign(translations.az, {
@@ -337,7 +345,15 @@ Object.assign(translations.az, {
     "Purchases": "Al\u0131\u015flar",
     "Receipts": "\u00c7ekl\u0259r",
     "Confirm action?": "\u018fm\u0259liyyat\u0131 t\u0259sdiql\u0259yin?",
-    "Balance top-up": "Balans art\u0131r\u0131lmas\u0131"
+    "Balance top-up": "Balans art\u0131r\u0131lmas\u0131",
+    "Profile": "Profil",
+    "No purchases yet": "H\u0259l\u0259 al\u0131\u015f yoxdur",
+    "No receipts yet": "H\u0259l\u0259 \u00e7ek yoxdur",
+    "Dashboard": "Panel",
+    "Users": "\u0130stifad\u0259\u00e7il\u0259r",
+    "Products": "M\u0259hsullar",
+    "Sliders": "Slayderl\u0259r",
+    "Site": "Sayt"
 });
 
 const originalText = new WeakMap();
