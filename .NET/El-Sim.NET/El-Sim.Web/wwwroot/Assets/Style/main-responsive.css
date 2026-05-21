@@ -518,7 +518,7 @@
     }
 
     .support-chat-form {
-        grid-template-columns: minmax(0, 1fr) 54px;
+        grid-template-columns: minmax(0, 1fr) 54px 54px;
         padding: 12px;
     }
 

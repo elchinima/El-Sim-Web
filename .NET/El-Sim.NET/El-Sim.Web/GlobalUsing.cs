@@ -10,6 +10,7 @@ global using El_Sim.Infrastructure.Security;
 global using El_Sim.Persistence;
 global using El_Sim.Persistence.Initialization;
 global using El_Sim.Web.Models;
+global using El_Sim.Web.Services;
 global using El_Sim.Web.Services.AI;
 global using Microsoft.AspNetCore.Authentication;
 global using Microsoft.AspNetCore.Authentication.Cookies;

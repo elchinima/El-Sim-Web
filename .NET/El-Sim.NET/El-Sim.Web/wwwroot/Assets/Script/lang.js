@@ -369,6 +369,7 @@ Object.assign(translations.ru, {
     "Send": "Отправить",
     "Send message": "Отправить сообщение",
     "Support is typing": "Поддержка печатает",
+    "Connection error": "Ошибка подключения",
     "Chat closes in": "Чат закроется через",
     "Chat closed": "Чат закрыт",
     "Support is temporarily unavailable.": "Поддержка временно недоступна.",
@@ -391,6 +392,7 @@ Object.assign(translations.az, {
     "Send": "Göndər",
     "Send message": "Mesaj göndər",
     "Support is typing": "Dəstək yazır",
+    "Connection error": "Bağlantı xətası",
     "Chat closes in": "Çat bağlanacaq",
     "Chat closed": "Çat bağlandı",
     "Support is temporarily unavailable.": "Dəstək müvəqqəti olaraq əlçatan deyil.",
@@ -401,19 +403,37 @@ Object.assign(translations.az, {
 });
 
 Object.assign(translations.ru, {
-    "AI assistant": "AI \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442",
     "You are chatting with:": "\u0421 \u0432\u0430\u043c\u0438 \u0440\u0430\u0437\u0433\u043e\u0432\u0430\u0440\u0438\u0432\u0430\u0435\u0442:",
     "Chat closed due to inactivity.": "\u0427\u0430\u0442 \u0437\u0430\u043a\u0440\u044b\u0442 \u0438\u0437-\u0437\u0430 \u0431\u0435\u0437\u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f.",
     "History": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f",
+    "support history": "\u0438\u0441\u0442\u043e\u0440\u0438\u044f \u043f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0438",
+    "Chat history": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0447\u0430\u0442\u043e\u0432",
+    "Support": "\u041f\u043e\u0434\u0434\u0435\u0440\u0436\u043a\u0430",
+    "Number": "\u041d\u043e\u043c\u0435\u0440",
+    "Operator": "\u041e\u043f\u0435\u0440\u0430\u0442\u043e\u0440",
+    "Time": "\u0412\u0440\u0435\u043c\u044f",
+    "chat": "\u0447\u0430\u0442",
+    "You": "\u0412\u044b",
+    "No messages yet.": "\u0421\u043e\u043e\u0431\u0449\u0435\u043d\u0438\u0439 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442.",
+    "Close": "\u0417\u0430\u043a\u0440\u044b\u0442\u044c",
     "No chat history yet.": "\u0418\u0441\u0442\u043e\u0440\u0438\u0438 \u0447\u0430\u0442\u0430 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442.",
     "Chat history is temporarily unavailable.": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0447\u0430\u0442\u0430 \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430."
 });
 
 Object.assign(translations.az, {
-    "AI assistant": "AI assistent",
     "You are chatting with:": "Sizinle danisir:",
     "Chat closed due to inactivity.": "Cat hereketsizliye gore baglandi.",
-    "History": "Tarixce",
+    "History": "Tarix\u00e7\u0259",
+    "support history": "d\u0259st\u0259k tarix\u00e7\u0259si",
+    "Chat history": "\u00c7at tarix\u00e7\u0259si",
+    "Support": "D\u0259st\u0259k",
+    "Number": "N\u00f6mr\u04d9",
+    "Operator": "Operator",
+    "Time": "Vaxt",
+    "chat": "\u00e7at",
+    "You": "Siz",
+    "No messages yet.": "H\u0259l\u0259 mesaj yoxdur.",
+    "Close": "Ba\u011fla",
     "No chat history yet.": "Hele cat tarixcesi yoxdur.",
     "Chat history is temporarily unavailable.": "Cat tarixcesi muveqqeti olaraq elcatan deyil."
 });

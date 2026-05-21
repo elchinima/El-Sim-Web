@@ -9,33 +9,54 @@ public class SupportController : Controller
     private readonly IntentDetector _intentDetector;
     private readonly ContextBuilder _contextBuilder;
     private readonly GeminiService _geminiService;
+    private readonly ElSimDbContext _dbContext;
+    private readonly SupportImageProcessor _supportImageProcessor;
+    private readonly IWebHostEnvironment _environment;
 
     public SupportController(
         IntentDetector intentDetector,
         ContextBuilder contextBuilder,
-        GeminiService geminiService)
+        GeminiService geminiService,
+        ElSimDbContext dbContext,
+        SupportImageProcessor supportImageProcessor,
+        IWebHostEnvironment environment)
     {
         _intentDetector = intentDetector;
         _contextBuilder = contextBuilder;
         _geminiService = geminiService;
+        _dbContext = dbContext;
+        _supportImageProcessor = supportImageProcessor;
+        _environment = environment;
     }
 
+    [Authorize]
     [HttpPost("send")]
     public async Task<IActionResult> Send([FromBody] SupportChatRequest? request)
     {
         var message = request?.Message?.Trim() ?? string.Empty;
+        var attachedImage = request?.ImageId is int imageId
+            ? await GetPendingImage(imageId)
+            : null;
 
-        if (string.IsNullOrWhiteSpace(message))
+        if (string.IsNullOrWhiteSpace(message) && attachedImage is null)
         {
             return BadRequest(new { reply = "Message is required.", agentName = GetAgentName(), closeChat = false });
         }
 
-        var agentName = GetAgentName();
+        var activeChat = await GetActiveChat();
+        var agentName = activeChat?.AgentName ?? GetAgentName();
+        if (activeChat is not null)
+        {
+            HttpContext.Session.SetInt32("SupportChatId", activeChat.Id);
+            HttpContext.Session.SetString("SupportAgentName", activeChat.AgentName);
+        }
         var language = NormalizeLanguage(request?.Language);
         var sessionHistory = GetSessionHistory();
         var history = sessionHistory.Count == 0 ? NormalizeHistory(request?.History) : sessionHistory;
 
-        if (IsBotQuestion(message))
+        var aiMessage = string.IsNullOrWhiteSpace(message) ? "User sent an image." : message;
+
+        if (!string.IsNullOrWhiteSpace(message) && IsBotQuestion(message))
         {
             var count = (HttpContext.Session.GetInt32("BotQuestionCount") ?? 0) + 1;
             HttpContext.Session.SetInt32("BotQuestionCount", count);
@@ -45,43 +66,172 @@ public class SupportController : Controller
                 ? GetCloseChatReply(language)
                 : GetBotQuestionReply(language, agentName, count);
 
-            SaveSessionHistory(history, message, reply);
+            await SaveChatAsync(history, message, reply, agentName, attachedImage, closeChat);
 
             return Json(new SupportChatResponse
             {
                 Reply = reply,
                 AgentName = agentName,
                 CloseChat = closeChat,
-                CloseAfterSeconds = closeChat ? 60 : 0
+                CloseAfterSeconds = closeChat ? 60 : 0,
+                ImageUrl = attachedImage?.FilePath
             });
         }
 
         HttpContext.Session.SetInt32("BotQuestionCount", 0);
 
-        var intent = _intentDetector.Detect(message);
+        var intent = _intentDetector.Detect(aiMessage);
         var prompt = await _contextBuilder.BuildAsync(intent, agentName);
         var geminiHistory = history.TakeLast(10).ToList();
-        var geminiReply = await _geminiService.SendAsync(prompt, geminiHistory, message);
-
-        SaveSessionHistory(history, message, geminiReply);
-        var shouldCloseAfterFarewell = IsFarewell(message);
+        var geminiReply = await _geminiService.SendAsync(prompt, geminiHistory, aiMessage);
+        var hasConnectionError = string.Equals(geminiReply, GeminiService.ConnectionErrorReply, StringComparison.Ordinal);
+        var shouldCloseAfterFarewell = !string.IsNullOrWhiteSpace(message) && IsFarewell(message);
+        await SaveChatAsync(history, message, hasConnectionError ? string.Empty : geminiReply, agentName, attachedImage, shouldCloseAfterFarewell);
 
         return Json(new SupportChatResponse
         {
-            Reply = geminiReply,
+            Reply = hasConnectionError ? string.Empty : geminiReply,
             AgentName = agentName,
             CloseChat = shouldCloseAfterFarewell,
-            CloseAfterSeconds = shouldCloseAfterFarewell ? 60 : 0
+            CloseAfterSeconds = shouldCloseAfterFarewell ? 60 : 0,
+            ImageUrl = attachedImage?.FilePath,
+            HasConnectionError = hasConnectionError
         });
     }
 
-    [HttpGet("history")]
-    public IActionResult History()
+    [Authorize]
+    [HttpPost("image")]
+    [RequestSizeLimit(3_200_000)]
+    public async Task<IActionResult> UploadImage(IFormFile? image)
     {
+        if (image is null || image.Length == 0)
+        {
+            return BadRequest(new { message = "Image is required." });
+        }
+
+        if (image.Length > 3 * 1024 * 1024)
+        {
+            return BadRequest(new { message = "Image must be up to 3 MB." });
+        }
+
+        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+        if (extension is not ".jpg" and not ".jpeg" and not ".png")
+        {
+            return BadRequest(new { message = "Only jpeg, jpg and png images are allowed." });
+        }
+
+        var uploadDirectory = Path.Combine(_environment.WebRootPath, "Uploads", "Support");
+        Directory.CreateDirectory(uploadDirectory);
+
+        var fileName = $"{Guid.NewGuid():N}.webp";
+        var relativePath = $"/Uploads/Support/{fileName}";
+        var outputPath = Path.Combine(uploadDirectory, fileName);
+
+        try
+        {
+            await using var input = image.OpenReadStream();
+            await _supportImageProcessor.SaveWebpAsync(input, outputPath, HttpContext.RequestAborted);
+        }
+        catch
+        {
+            if (System.IO.File.Exists(outputPath))
+            {
+                System.IO.File.Delete(outputPath);
+            }
+
+            return BadRequest(new { message = "Image could not be processed." });
+        }
+
+        var supportImage = new SupportChatImage
+        {
+            UserId = GetCurrentUserId(),
+            SessionId = GetSessionId(),
+            FilePath = relativePath,
+            CreatedAtUtc = DateTime.UtcNow
+        };
+
+        _dbContext.SupportChatImages.Add(supportImage);
+        await _dbContext.SaveChangesAsync();
+
+        return Json(new { id = supportImage.Id, url = relativePath });
+    }
+
+    [Authorize]
+    [HttpDelete("image/{id:int}")]
+    public async Task<IActionResult> DeleteImage(int id)
+    {
+        var image = await GetPendingImage(id);
+
+        if (image is null)
+        {
+            return NotFound();
+        }
+
+        DeleteImageFile(image.FilePath);
+        _dbContext.SupportChatImages.Remove(image);
+        await _dbContext.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpGet("chats")]
+    public async Task<IActionResult> Chats()
+    {
+        var userId = GetCurrentUserId();
+        var sessionId = GetSessionId();
+        var chats = await _dbContext.SupportChats
+            .AsNoTracking()
+            .Include(item => item.Messages)
+                .ThenInclude(message => message.Images)
+            .Where(item => item.IsClosed
+                && item.Messages.Any()
+                && ((userId != null && item.UserId == userId) || item.SessionId == sessionId))
+            .OrderByDescending(item => item.CreatedAtUtc)
+            .Select(item => new SupportHistoryItemViewModel
+            {
+                Id = item.Id,
+                AgentName = item.AgentName,
+                CreatedAtUtc = item.CreatedAtUtc,
+                Messages = item.Messages
+                    .OrderBy(message => message.CreatedAtUtc)
+                    .Select(message => new SupportHistoryMessageViewModel
+                    {
+                        Role = message.Role,
+                        Text = message.Text,
+                        ImageUrl = message.Images.Select(image => image.FilePath).FirstOrDefault(),
+                        CreatedAtUtc = message.CreatedAtUtc
+                    })
+                    .ToList()
+            })
+            .ToListAsync();
+
+        return View("~/Views/Home/SupportHistory.cshtml", new SupportHistoryViewModel { Chats = chats });
+    }
+
+    [Authorize]
+    [HttpPost("close")]
+    public async Task<IActionResult> Close()
+    {
+        await CloseCurrentChat();
+
+        return Ok();
+    }
+
+    [Authorize]
+    [HttpGet("history")]
+    public async Task<IActionResult> History()
+    {
+        var activeChat = await GetActiveChat();
+        var dbHistory = activeChat is not null
+            ? await GetChatHistory(activeChat.Id)
+            : [];
+
         return Json(new
         {
-            agentName = GetAgentName(),
-            history = GetFullSessionHistory()
+            agentName = activeChat?.AgentName ?? GetAgentName(),
+            history = dbHistory.Count > 0 ? dbHistory : GetFullSessionHistory(),
+            isActive = activeChat is not null,
+            isClosed = activeChat?.IsClosed ?? false
         });
     }
 
@@ -139,7 +289,7 @@ public class SupportController : Controller
         }
     }
 
-    private void SaveSessionHistory(List<ChatMessage> history, string userMessage, string reply)
+    private async Task SaveChatAsync(List<ChatMessage> history, string userMessage, string reply, string agentName, SupportChatImage? image, bool closeChat)
     {
         history.Add(new ChatMessage { Role = "user", Text = userMessage });
         history.Add(new ChatMessage { Role = "model", Text = reply });
@@ -159,6 +309,35 @@ public class SupportController : Controller
 
         HttpContext.Session.SetString("SupportChatHistory", JsonSerializer.Serialize(trimmed, SessionJsonOptions));
         HttpContext.Session.SetString("SupportChatFullHistory", JsonSerializer.Serialize(fullHistory, SessionJsonOptions));
+
+        var chat = await GetOrCreateChat(agentName);
+        var now = DateTime.UtcNow;
+        var userMessageEntity = new SupportChatMessage
+        {
+            SupportChatId = chat.Id,
+            Role = "user",
+            Text = userMessage,
+            CreatedAtUtc = now
+        };
+
+        _dbContext.SupportChatMessages.Add(userMessageEntity);
+        await _dbContext.SaveChangesAsync();
+
+        if (image is not null)
+        {
+            image.SupportChatMessageId = userMessageEntity.Id;
+        }
+
+        _dbContext.SupportChatMessages.Add(new SupportChatMessage
+        {
+            SupportChatId = chat.Id,
+            Role = "model",
+            Text = reply,
+            CreatedAtUtc = DateTime.UtcNow
+        });
+        chat.UpdatedAtUtc = DateTime.UtcNow;
+        chat.IsClosed = closeChat;
+        await _dbContext.SaveChangesAsync();
     }
 
     private static List<ChatMessage> NormalizeHistory(List<ChatMessage>? history)
@@ -261,5 +440,154 @@ public class SupportController : Controller
             "az" => "az",
             _ => "en"
         };
+    }
+
+    private int? GetCurrentUserId()
+    {
+        return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var userId) ? userId : null;
+    }
+
+    private string GetSessionId()
+    {
+        var sessionId = HttpContext.Session.GetString("SupportSessionId");
+
+        if (!string.IsNullOrWhiteSpace(sessionId))
+        {
+            return sessionId;
+        }
+
+        sessionId = Convert.ToHexString(RandomNumberGenerator.GetBytes(24));
+        HttpContext.Session.SetString("SupportSessionId", sessionId);
+
+        return sessionId;
+    }
+
+    private async Task<SupportChat> GetOrCreateChat(string agentName)
+    {
+        var chatId = HttpContext.Session.GetInt32("SupportChatId");
+
+        if (chatId is int existingChatId)
+        {
+            var existingChat = await _dbContext.SupportChats.FirstOrDefaultAsync(item => item.Id == existingChatId);
+
+            if (existingChat is not null && !existingChat.IsClosed)
+            {
+                return existingChat;
+            }
+        }
+
+        var activeChat = await GetActiveChat();
+
+        if (activeChat is not null)
+        {
+            HttpContext.Session.SetInt32("SupportChatId", activeChat.Id);
+            HttpContext.Session.SetString("SupportAgentName", activeChat.AgentName);
+
+            return activeChat;
+        }
+
+        var now = DateTime.UtcNow;
+        var chat = new SupportChat
+        {
+            UserId = GetCurrentUserId(),
+            SessionId = GetSessionId(),
+            AgentName = agentName,
+            IsClosed = false,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        };
+
+        _dbContext.SupportChats.Add(chat);
+        await _dbContext.SaveChangesAsync();
+        HttpContext.Session.SetInt32("SupportChatId", chat.Id);
+
+        return chat;
+    }
+
+    private async Task<SupportChat?> GetActiveChat()
+    {
+        var userId = GetCurrentUserId();
+        var sessionId = HttpContext.Session.GetString("SupportSessionId");
+        var chatId = HttpContext.Session.GetInt32("SupportChatId");
+
+        var query = _dbContext.SupportChats.Where(item => !item.IsClosed);
+
+        if (chatId is int existingChatId)
+        {
+            var sessionChat = await query.FirstOrDefaultAsync(item => item.Id == existingChatId);
+
+            if (sessionChat is not null)
+            {
+                return sessionChat;
+            }
+        }
+
+        return await query
+            .Where(item => (userId != null && item.UserId == userId) || (!string.IsNullOrWhiteSpace(sessionId) && item.SessionId == sessionId))
+            .OrderByDescending(item => item.UpdatedAtUtc)
+            .FirstOrDefaultAsync();
+    }
+
+    private async Task<List<ChatMessage>> GetChatHistory(int chatId)
+    {
+        return await _dbContext.SupportChatMessages
+            .AsNoTracking()
+            .Where(item => item.SupportChatId == chatId)
+            .OrderBy(item => item.CreatedAtUtc)
+            .Select(item => new ChatMessage
+            {
+                Role = item.Role,
+                Text = item.Text,
+                ImageUrl = item.Images.Select(image => image.FilePath).FirstOrDefault()
+            })
+            .ToListAsync();
+    }
+
+    private async Task CloseCurrentChat()
+    {
+        var chatId = HttpContext.Session.GetInt32("SupportChatId");
+
+        if (chatId is not int existingChatId)
+        {
+            return;
+        }
+
+        var chat = await _dbContext.SupportChats.FirstOrDefaultAsync(item => item.Id == existingChatId);
+
+        if (chat is null)
+        {
+            return;
+        }
+
+        chat.IsClosed = true;
+        chat.UpdatedAtUtc = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+        HttpContext.Session.Remove("SupportChatId");
+        HttpContext.Session.Remove("SupportChatHistory");
+        HttpContext.Session.Remove("SupportChatFullHistory");
+    }
+
+    private async Task<SupportChatImage?> GetPendingImage(int id)
+    {
+        var sessionId = GetSessionId();
+        var userId = GetCurrentUserId();
+
+        return await _dbContext.SupportChatImages
+            .FirstOrDefaultAsync(item => item.Id == id
+                && item.SupportChatMessageId == null
+                && item.SessionId == sessionId
+                && item.UserId == userId);
+    }
+
+    private void DeleteImageFile(string filePath)
+    {
+        var webRoot = Path.GetFullPath(_environment.WebRootPath);
+        var relativePath = filePath.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+        var fullPath = Path.GetFullPath(Path.Combine(webRoot, relativePath));
+
+        if (fullPath.StartsWith(webRoot, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(fullPath))
+        {
+            System.IO.File.Delete(fullPath);
+        }
     }
 }

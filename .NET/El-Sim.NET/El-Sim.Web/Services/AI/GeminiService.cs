@@ -2,6 +2,8 @@ namespace El_Sim.Web.Services.AI;
 
 public class GeminiService
 {
+    public const string ConnectionErrorReply = "__SUPPORT_CONNECTION_ERROR__";
+
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly GeminiOptions _options;
 
@@ -15,10 +17,10 @@ public class GeminiService
     {
         if (string.IsNullOrWhiteSpace(_options.ApiKey) || _options.ApiKey.Trim().StartsWith("{{", StringComparison.Ordinal))
         {
-            return "Gemini API key is not configured.";
+            return ConnectionErrorReply;
         }
 
-        var model = string.IsNullOrWhiteSpace(_options.Model) ? "gemini-3.5-flash" : _options.Model.Trim();
+        var model = string.IsNullOrWhiteSpace(_options.Model) ? "gemini-3.1-flash-lite" : _options.Model.Trim();
         var endpoint = $"https://generativelanguage.googleapis.com/v1beta/models/{Uri.EscapeDataString(model)}:generateContent?key={Uri.EscapeDataString(_options.ApiKey)}";
         var contents = history
             .TakeLast(10)
@@ -50,7 +52,7 @@ public class GeminiService
 
         if (!response.IsSuccessStatusCode)
         {
-            return "AI assistant is temporarily unavailable. Please try again in a moment.";
+            return ConnectionErrorReply;
         }
 
         var result = await response.Content.ReadFromJsonAsync<GeminiGenerateResponse>();
@@ -60,7 +62,7 @@ public class GeminiService
             .FirstOrDefault(part => !string.IsNullOrWhiteSpace(part));
 
         return string.IsNullOrWhiteSpace(text)
-            ? "AI assistant did not return a response. Please try again."
+            ? ConnectionErrorReply
             : text;
     }
 

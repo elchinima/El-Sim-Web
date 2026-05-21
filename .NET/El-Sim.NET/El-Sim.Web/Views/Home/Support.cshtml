@@ -9,9 +9,9 @@
       <p class="eyebrow">support chat</p>
       <h1>How can we help?</h1>
     </div>
-    <div class="support-chat-status" aria-label="Support status">
+    <div class="support-chat-status is-idle" aria-label="Support status" data-support-status>
       <span></span>
-      <strong>Online</strong>
+      <strong data-support-status-text data-no-translate>No request</strong>
     </div>
   </section>
 
@@ -32,11 +32,7 @@
         </div>
       </div>
       <div class="support-chat-actions">
-        <button class="support-chat-history" type="button" data-chat-history-toggle data-no-translate>History</button>
-        <div class="support-chat-badge">
-          <span></span>
-          <strong data-ai-badge data-no-translate>AI assistant</strong>
-        </div>
+        <a class="support-chat-history" href="/support/chats" data-no-translate>History</a>
       </div>
     </div>
 
@@ -59,13 +55,29 @@
     </div>
 
     <form class="support-chat-form" data-chat-form autocomplete="off">
+      <div class="support-chat-waiting" data-chat-waiting hidden>
+        <span data-chat-waiting-text data-no-translate>Please wait for operator connection</span>
+        <i></i><i></i><i></i>
+      </div>
+      <div class="support-chat-attachment-preview" data-attachment-preview hidden>
+        <button type="button" data-attachment-open aria-label="Open image preview">
+          <img src="" alt="Attached image">
+        </button>
+        <button type="button" data-attachment-remove aria-label="Remove image">×</button>
+      </div>
       <label class="support-chat-input-wrap" for="support-chat-input">
         <span class="support-chat-input-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24">
             <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
           </svg>
         </span>
-        <input id="support-chat-input" type="text" data-chat-input data-no-translate placeholder="Type your message" maxlength="260" required>
+        <input id="support-chat-input" type="text" data-chat-input data-no-translate placeholder="Type your message" maxlength="260">
+      </label>
+      <label class="support-chat-attach" aria-label="Attach image" title="Attach image">
+        <input type="file" data-chat-image accept="image/jpeg,image/jpg,image/png">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21.4 11.6 12 21a6 6 0 0 1-8.5-8.5l9.8-9.8a4 4 0 0 1 5.7 5.7l-9.8 9.8a2 2 0 0 1-2.8-2.8l9.4-9.4"></path>
+        </svg>
       </label>
       <button class="support-chat-send" type="submit" aria-label="Send message" title="Send message">
         <span data-no-translate>Send</span>
@@ -75,5 +87,9 @@
         </svg>
       </button>
     </form>
+    <dialog class="support-image-dialog" data-attachment-dialog>
+      <button type="button" data-attachment-close aria-label="Close preview">×</button>
+      <img src="" alt="Attached image preview">
+    </dialog>
   </section>
 </main>

@@ -16,5 +16,6 @@ public class AppUser
     public ICollection<ProductPurchase> ProductPurchases { get; set; } = new List<ProductPurchase>();
     public ICollection<WalletTransaction> WalletTransactions { get; set; } = new List<WalletTransaction>();
     public ICollection<PaymentReceipt> PaymentReceipts { get; set; } = new List<PaymentReceipt>();
+    public ICollection<SupportChat> SupportChats { get; set; } = new List<SupportChat>();
+    public ICollection<SupportChatImage> SupportChatImages { get; set; } = new List<SupportChatImage>();
 }
-

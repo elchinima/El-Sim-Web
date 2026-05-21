@@ -16,6 +16,9 @@ public class ElSimDbContext : DbContext
     public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
     public DbSet<PaymentReceipt> PaymentReceipts => Set<PaymentReceipt>();
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
+    public DbSet<SupportChat> SupportChats => Set<SupportChat>();
+    public DbSet<SupportChatMessage> SupportChatMessages => Set<SupportChatMessage>();
+    public DbSet<SupportChatImage> SupportChatImages => Set<SupportChatImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -237,6 +240,58 @@ public class ElSimDbContext : DbContext
             entity.Property(slider => slider.SortOrder).IsRequired();
             entity.Property(slider => slider.CreatedAtUtc).IsRequired();
             entity.HasIndex(slider => new { slider.Language, slider.IsMobile, slider.SortOrder });
+        });
+
+        modelBuilder.Entity<SupportChat>(entity =>
+        {
+            entity.ToTable("SupportChats");
+            entity.HasKey(chat => chat.Id);
+            entity.Property(chat => chat.Id).ValueGeneratedOnAdd();
+            entity.Property(chat => chat.SessionId).HasMaxLength(88).IsRequired();
+            entity.Property(chat => chat.AgentName).HasMaxLength(40).IsRequired();
+            entity.Property(chat => chat.IsClosed).HasDefaultValue(false);
+            entity.Property(chat => chat.CreatedAtUtc).IsRequired();
+            entity.Property(chat => chat.UpdatedAtUtc).IsRequired();
+            entity.HasOne(chat => chat.User)
+                .WithMany(user => user.SupportChats)
+                .HasForeignKey(chat => chat.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(chat => new { chat.UserId, chat.CreatedAtUtc });
+            entity.HasIndex(chat => chat.SessionId);
+        });
+
+        modelBuilder.Entity<SupportChatMessage>(entity =>
+        {
+            entity.ToTable("SupportChatMessages");
+            entity.HasKey(message => message.Id);
+            entity.Property(message => message.Id).ValueGeneratedOnAdd();
+            entity.Property(message => message.Role).HasMaxLength(16).IsRequired();
+            entity.Property(message => message.Text).IsRequired();
+            entity.Property(message => message.CreatedAtUtc).IsRequired();
+            entity.HasOne(message => message.SupportChat)
+                .WithMany(chat => chat.Messages)
+                .HasForeignKey(message => message.SupportChatId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(message => new { message.SupportChatId, message.CreatedAtUtc });
+        });
+
+        modelBuilder.Entity<SupportChatImage>(entity =>
+        {
+            entity.ToTable("SupportChatImages");
+            entity.HasKey(image => image.Id);
+            entity.Property(image => image.Id).ValueGeneratedOnAdd();
+            entity.Property(image => image.SessionId).HasMaxLength(88).IsRequired();
+            entity.Property(image => image.FilePath).HasMaxLength(260).IsRequired();
+            entity.Property(image => image.CreatedAtUtc).IsRequired();
+            entity.HasOne(image => image.User)
+                .WithMany(user => user.SupportChatImages)
+                .HasForeignKey(image => image.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(image => image.SupportChatMessage)
+                .WithMany(message => message.Images)
+                .HasForeignKey(image => image.SupportChatMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(image => image.CreatedAtUtc);
         });
     }
 }

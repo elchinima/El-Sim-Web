@@ -1,0 +1,99 @@
+@model SupportHistoryViewModel
+
+@{
+    ViewData["Title"] = "El-Sim - Support History";
+    ViewData["SupportChrome"] = true;
+}
+
+<main class="support-chat-shell support-history-shell">
+  <section class="support-chat-hero">
+    <div>
+      <p class="eyebrow">support history</p>
+      <h1>Chat history</h1>
+    </div>
+    <a class="support-home-link" href="/support" aria-label="Support">Support</a>
+  </section>
+
+  <section class="support-history-list" aria-label="Support chats">
+    @if (Model.Chats.Count == 0)
+    {
+      <p class="support-history-empty">No chat history yet.</p>
+    }
+    else
+    {
+      @foreach (var chat in Model.Chats)
+      {
+        <button class="support-history-card" type="button" data-history-card data-chat-id="@chat.Id">
+          <span>Number</span>
+          <strong>#@chat.Id</strong>
+          <span>Operator</span>
+          <strong>@chat.AgentName</strong>
+          <span>Time</span>
+          <strong>@chat.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</strong>
+        </button>
+      }
+    }
+  </section>
+
+  @foreach (var chat in Model.Chats)
+  {
+    <dialog class="support-history-dialog" data-history-dialog="@chat.Id">
+      <div class="support-history-dialog-head">
+        <div>
+          <p class="eyebrow">chat</p>
+          <h2><span>Number</span> #@chat.Id</h2>
+        </div>
+        <button type="button" data-history-close aria-label="Close">&times;</button>
+      </div>
+      <div class="support-history-dialog-meta">
+        <span>Operator</span>
+        <strong>@chat.AgentName</strong>
+        <span>Time</span>
+        <strong>@chat.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</strong>
+      </div>
+      <div class="support-history-messages">
+        @if (chat.Messages.Count == 0)
+        {
+          <p class="support-history-empty">No messages yet.</p>
+        }
+        else
+        {
+          @foreach (var message in chat.Messages)
+          {
+            var isOperator = string.Equals(message.Role, "model", StringComparison.OrdinalIgnoreCase);
+            <article class="support-history-message @(isOperator ? "is-operator" : "is-user")">
+              <strong>@(isOperator ? chat.AgentName : "You")</strong>
+              @if (!string.IsNullOrWhiteSpace(message.ImageUrl))
+              {
+                <img src="@message.ImageUrl" alt="Attached image">
+              }
+              @if (!string.IsNullOrWhiteSpace(message.Text))
+              {
+                <p>@message.Text</p>
+              }
+              <time>@message.CreatedAtUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture)</time>
+            </article>
+          }
+        }
+      </div>
+    </dialog>
+  }
+</main>
+
+<script>
+  document.querySelectorAll("[data-history-card]").forEach((card) => {
+    card.addEventListener("click", () => {
+      document.querySelector(`[data-history-dialog="${card.dataset.chatId}"]`)?.showModal();
+    });
+  });
+
+  document.querySelectorAll("[data-history-dialog]").forEach((dialog) => {
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) {
+        dialog.close();
+      }
+    });
+
+    dialog.querySelector("[data-history-close]")?.addEventListener("click", () => dialog.close());
+  });
+</script>

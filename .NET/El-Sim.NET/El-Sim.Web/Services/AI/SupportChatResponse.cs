@@ -6,4 +6,6 @@ public class SupportChatResponse
     public string AgentName { get; set; } = string.Empty;
     public bool CloseChat { get; set; }
     public int CloseAfterSeconds { get; set; }
+    public string? ImageUrl { get; set; }
+    public bool HasConnectionError { get; set; }
 }
