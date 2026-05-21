@@ -10,6 +10,7 @@ namespace El_Sim.Web.Controllers
         private readonly ProductPricingService _productPricingService;
         private readonly PhoneNumberService _phoneNumberService;
         private readonly StripePaymentService _stripePaymentService;
+        private static readonly string[] SupportAgentNames = ["Aylin", "Sevda", "Leyla"];
 
         public HomeController(
             ElSimDbContext dbContext,
@@ -64,6 +65,11 @@ namespace El_Sim.Web.Controllers
 
         public IActionResult Support()
         {
+            if (!HttpContext.Session.GetInt32("BotQuestionCount").HasValue)
+            {
+                HttpContext.Session.SetInt32("BotQuestionCount", 0);
+            }
+
             return View();
         }
 

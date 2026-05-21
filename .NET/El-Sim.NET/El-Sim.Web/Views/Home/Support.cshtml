@@ -28,12 +28,15 @@
         </span>
         <div>
           <h2>El-Sim Support</h2>
-          <p>Usually replies in a moment</p>
+          <p data-agent-label data-no-translate hidden></p>
         </div>
       </div>
-      <div class="support-chat-badge">
-        <span></span>
-        Live simulation
+      <div class="support-chat-actions">
+        <button class="support-chat-history" type="button" data-chat-history-toggle data-no-translate>History</button>
+        <div class="support-chat-badge">
+          <span></span>
+          <strong data-ai-badge data-no-translate>AI assistant</strong>
+        </div>
       </div>
     </div>
 
@@ -62,10 +65,10 @@
             <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"></path>
           </svg>
         </span>
-        <input id="support-chat-input" type="text" data-chat-input placeholder="Type your message" maxlength="260" required>
+        <input id="support-chat-input" type="text" data-chat-input data-no-translate placeholder="Type your message" maxlength="260" required>
       </label>
       <button class="support-chat-send" type="submit" aria-label="Send message" title="Send message">
-        <span>Send</span>
+        <span data-no-translate>Send</span>
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="m22 2-7 20-4-9-9-4Z"></path>
           <path d="M22 2 11 13"></path>

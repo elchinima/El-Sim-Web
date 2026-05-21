@@ -369,6 +369,9 @@ Object.assign(translations.ru, {
     "Send": "Отправить",
     "Send message": "Отправить сообщение",
     "Support is typing": "Поддержка печатает",
+    "Chat closes in": "Чат закроется через",
+    "Chat closed": "Чат закрыт",
+    "Support is temporarily unavailable.": "Поддержка временно недоступна.",
     "Thanks, we are checking this in the simulator. Please keep your phone near a stable internet connection.": "Спасибо, мы проверяем это в симуляторе. Держите телефон рядом со стабильным интернет-соединением.",
     "If this is about a QR code, open your phone eSIM settings and make sure the code has not been used before.": "Если вопрос о QR-коде, откройте настройки eSIM на телефоне и убедитесь, что код раньше не использовался.",
     "For balance or plan questions, we can help you compare the current package with the best next option.": "По вопросам баланса или тарифа мы поможем сравнить текущий пакет с лучшим следующим вариантом.",
@@ -388,10 +391,31 @@ Object.assign(translations.az, {
     "Send": "Göndər",
     "Send message": "Mesaj göndər",
     "Support is typing": "Dəstək yazır",
+    "Chat closes in": "Çat bağlanacaq",
+    "Chat closed": "Çat bağlandı",
+    "Support is temporarily unavailable.": "Dəstək müvəqqəti olaraq əlçatan deyil.",
     "Thanks, we are checking this in the simulator. Please keep your phone near a stable internet connection.": "Təşəkkürlər, bunu simulyatorda yoxlayırıq. Telefonunuzu sabit internet bağlantısına yaxın saxlayın.",
     "If this is about a QR code, open your phone eSIM settings and make sure the code has not been used before.": "Söhbət QR koddan gedirsə, telefonunuzun eSIM ayarlarını açın və kodun əvvəl istifadə olunmadığına əmin olun.",
     "For balance or plan questions, we can help you compare the current package with the best next option.": "Balans və ya tarif suallarında cari paketi ən yaxşı növbəti seçimlə müqayisə etməyə kömək edərik.",
     "We will stay here while you try it. Send another message if something still does not work.": "Siz yoxlayarkən biz buradayıq. Nəsə hələ də işləmirsə, yenidən mesaj göndərin."
+});
+
+Object.assign(translations.ru, {
+    "AI assistant": "AI \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442",
+    "You are chatting with:": "\u0421 \u0432\u0430\u043c\u0438 \u0440\u0430\u0437\u0433\u043e\u0432\u0430\u0440\u0438\u0432\u0430\u0435\u0442:",
+    "Chat closed due to inactivity.": "\u0427\u0430\u0442 \u0437\u0430\u043a\u0440\u044b\u0442 \u0438\u0437-\u0437\u0430 \u0431\u0435\u0437\u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f.",
+    "History": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f",
+    "No chat history yet.": "\u0418\u0441\u0442\u043e\u0440\u0438\u0438 \u0447\u0430\u0442\u0430 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442.",
+    "Chat history is temporarily unavailable.": "\u0418\u0441\u0442\u043e\u0440\u0438\u044f \u0447\u0430\u0442\u0430 \u0432\u0440\u0435\u043c\u0435\u043d\u043d\u043e \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430."
+});
+
+Object.assign(translations.az, {
+    "AI assistant": "AI assistent",
+    "You are chatting with:": "Sizinle danisir:",
+    "Chat closed due to inactivity.": "Cat hereketsizliye gore baglandi.",
+    "History": "Tarixce",
+    "No chat history yet.": "Hele cat tarixcesi yoxdur.",
+    "Chat history is temporarily unavailable.": "Cat tarixcesi muveqqeti olaraq elcatan deyil."
 });
 
 const originalText = new WeakMap();
@@ -463,7 +487,7 @@ const applyLanguage = (language) => {
         const node = walker.currentNode;
         const parent = node.parentElement;
 
-        if (!parent || ["SCRIPT", "STYLE", "SVG"].includes(parent.tagName) || parent.closest("[data-product-i18n]")) {
+        if (!parent || ["SCRIPT", "STYLE", "SVG"].includes(parent.tagName) || parent.closest("[data-product-i18n], [data-no-translate]")) {
             continue;
         }
 

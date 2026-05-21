@@ -1039,6 +1039,29 @@ h3 {
     font-size: 13px;
 }
 
+.support-chat-badge strong {
+    font: inherit;
+}
+
+.support-chat-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.support-chat-history {
+    min-height: 38px;
+    min-width: 86px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.06);
+    font-weight: 800;
+    cursor: pointer;
+}
+
 .support-chat-avatar svg,
 .chat-message-icon svg,
 .support-chat-input-icon svg,
@@ -1107,6 +1130,14 @@ h3 {
 
 .chat-message p {
     overflow-wrap: anywhere;
+}
+
+.chat-message-author {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--cyan);
+    font-size: 12px;
+    font-weight: 800;
 }
 
 .chat-message time {
@@ -1212,6 +1243,12 @@ h3 {
     filter: brightness(1.08) saturate(1.08);
     transform: translateY(-1px);
     box-shadow: 0 16px 36px rgba(28, 168, 255, 0.22);
+}
+
+.support-chat-send:disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+    opacity: 0.72;
 }
 
 @keyframes supportPulse {
@@ -2209,6 +2246,22 @@ input[type="checkbox"] {
 .admin-product-form {
     display: grid;
     gap: 18px;
+}
+
+.admin-ai-grid {
+    display: grid;
+    gap: 18px;
+}
+
+.admin-ai-editor {
+    display: grid;
+    gap: 16px;
+}
+
+.admin-ai-editor textarea {
+    min-height: 320px;
+    font-family: Consolas, "Courier New", monospace;
+    line-height: 1.5;
 }
 
 .admin-products-editor {

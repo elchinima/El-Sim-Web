@@ -1,0 +1,74 @@
+@model AdminAISettingsViewModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "AI Settings - El-Sim Admin";
+}
+
+<main class="admin-shell">
+  <section class="admin-hero" aria-labelledby="admin-ai-title">
+    <div>
+      <p class="eyebrow">assistant</p>
+      <h1 id="admin-ai-title">AI Settings</h1>
+      <p>Edit the private prompt files used by the support assistant.</p>
+    </div>
+    <a class="button button-secondary" href="/admin/dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13h6V4H4v9Z"></path><path d="M14 20h6V4h-6v16Z"></path><path d="M4 20h6v-3H4v3Z"></path></svg><span class="button-text">Dashboard</span></a>
+  </section>
+
+  @if (TempData["AdminMessage"] is string message)
+  {
+    <p class="admin-message">@message</p>
+  }
+
+  @if (TempData["AdminError"] is string error)
+  {
+    <p class="admin-message is-error">@error</p>
+  }
+
+  <section class="admin-ai-grid" aria-label="AI prompt files">
+    <form method="post" asp-action="SaveAi" class="admin-panel admin-ai-editor">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="file" value="system.md">
+      <div class="admin-panel-head">
+        <div>
+          <p class="eyebrow">system</p>
+          <h2>system.md</h2>
+        </div>
+      </div>
+      <label class="field">
+        <textarea name="content" rows="16">@Model.System</textarea>
+      </label>
+      <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg><span class="button-text">Save system.md</span></button>
+    </form>
+
+    <form method="post" asp-action="SaveAi" class="admin-panel admin-ai-editor">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="file" value="activation.md">
+      <div class="admin-panel-head">
+        <div>
+          <p class="eyebrow">activation</p>
+          <h2>activation.md</h2>
+        </div>
+      </div>
+      <label class="field">
+        <textarea name="content" rows="16">@Model.Activation</textarea>
+      </label>
+      <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg><span class="button-text">Save activation.md</span></button>
+    </form>
+
+    <form method="post" asp-action="SaveAi" class="admin-panel admin-ai-editor">
+      @Html.AntiForgeryToken()
+      <input type="hidden" name="file" value="faq.md">
+      <div class="admin-panel-head">
+        <div>
+          <p class="eyebrow">faq</p>
+          <h2>faq.md</h2>
+        </div>
+      </div>
+      <label class="field">
+        <textarea name="content" rows="16">@Model.Faq</textarea>
+      </label>
+      <button class="button button-primary" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"></path><path d="M17 21v-8H7v8"></path><path d="M7 3v5h8"></path></svg><span class="button-text">Save faq.md</span></button>
+    </form>
+  </section>
+</main>

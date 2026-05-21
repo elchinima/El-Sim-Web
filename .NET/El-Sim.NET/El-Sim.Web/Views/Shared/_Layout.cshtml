@@ -30,12 +30,12 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@@600;700;800&family=DM+Sans:wght@@400;500;700&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="/Assets/Style/main-style.css">
-  <link rel="stylesheet" href="/Assets/Style/main-responsive.css">
-  <script defer src="/Assets/Script/main-script.js"></script>
-  <script defer src="/Assets/Script/lang.js"></script>
-  <script defer src="/Assets/Script/support-chat.js"></script>
-  <script defer src="/Assets/Script/carousel.js"></script>
+  <link rel="stylesheet" href="/Assets/Style/main-style.css" asp-append-version="true">
+  <link rel="stylesheet" href="/Assets/Style/main-responsive.css" asp-append-version="true">
+  <script defer src="/Assets/Script/main-script.js" asp-append-version="true"></script>
+  <script defer src="/Assets/Script/lang.js" asp-append-version="true"></script>
+  <script defer src="/Assets/Script/support-chat.js" asp-append-version="true"></script>
+  <script defer src="/Assets/Script/carousel.js" asp-append-version="true"></script>
 </head>
 
 <body class="@(ViewData["SupportChrome"] as bool? == true ? "support-chat-page" : "")">

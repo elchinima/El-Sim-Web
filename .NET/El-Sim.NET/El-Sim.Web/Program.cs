@@ -3,6 +3,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddControllersWithViews();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
 builder.Services.AddDbContext<ElSimDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.Configure<EmailOptions>(options =>
 {
@@ -21,6 +23,11 @@ builder.Services.AddScoped<ProductPricingService>();
 builder.Services.AddScoped<PhoneNumberService>();
 builder.Services.AddScoped<StripePaymentService>();
 builder.Services.AddHttpClient<IExchangeRateService, ExchangeRateService>();
+builder.Services.AddHttpClient("Gemini");
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddScoped<GeminiService>();
+builder.Services.AddScoped<ContextBuilder>();
+builder.Services.AddSingleton<IntentDetector>();
 builder.Services.Configure<StripeOptions>(builder.Configuration.GetSection("Stripe"));
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -53,6 +60,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 

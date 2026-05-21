@@ -62,6 +62,15 @@
         </svg>
         <span>Sliders</span>
       </a>
+      <a class="@((ViewContext.RouteData.Values["action"]?.ToString() == "Ai") ? "is-active" : "")" href="/admin/ai">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3a7 7 0 0 1 7 7v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3a7 7 0 0 1 7-7Z"></path>
+          <path d="M9 21h6"></path>
+          <path d="M9 11h.01"></path>
+          <path d="M15 11h.01"></path>
+        </svg>
+        <span>AI</span>
+      </a>
     </nav>
 
     <a class="admin-exit" href="/">

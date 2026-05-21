@@ -82,6 +82,52 @@ public class AdminController : Controller
         });
     }
 
+    [Authorize]
+    public async Task<IActionResult> Ai()
+    {
+        var adminOnlyResult = GetAdminOnlyResult();
+
+        if (adminOnlyResult is not null)
+        {
+            return adminOnlyResult;
+        }
+
+        return View(new AdminAISettingsViewModel
+        {
+            System = await ReadAiFile("system.md"),
+            Activation = await ReadAiFile("activation.md"),
+            Faq = await ReadAiFile("faq.md")
+        });
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SaveAi(string file, string content)
+    {
+        var adminOnlyResult = GetAdminOnlyResult();
+
+        if (adminOnlyResult is not null)
+        {
+            return adminOnlyResult;
+        }
+
+        var fileName = NormalizeAiFile(file);
+
+        if (fileName is null)
+        {
+            TempData["AdminError"] = "Unknown AI file.";
+            return RedirectToAction(nameof(Ai));
+        }
+
+        var directory = GetAiDirectory();
+        Directory.CreateDirectory(directory);
+        await System.IO.File.WriteAllTextAsync(Path.Combine(directory, fileName), content ?? string.Empty, Encoding.UTF8);
+        TempData["AdminMessage"] = $"{fileName} saved.";
+
+        return RedirectToAction(nameof(Ai));
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ProductCategory(AdminProductEditorViewModel model, string? saveProducts)
@@ -704,6 +750,43 @@ public class AdminController : Controller
                 .Include(item => item.Account)
                 .FirstOrDefaultAsync(item => item.Id == userId)
             : null;
+    }
+
+    private IActionResult? GetAdminOnlyResult()
+    {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return RedirectToAction("Login", "Home");
+        }
+
+        return string.Equals(User.FindFirstValue("is-admin"), bool.TrueString, StringComparison.OrdinalIgnoreCase)
+            ? null
+            : Forbid();
+    }
+
+    private async Task<string> ReadAiFile(string fileName)
+    {
+        var path = Path.Combine(GetAiDirectory(), fileName);
+
+        return System.IO.File.Exists(path)
+            ? await System.IO.File.ReadAllTextAsync(path, Encoding.UTF8)
+            : string.Empty;
+    }
+
+    private string GetAiDirectory()
+    {
+        return Path.GetFullPath(Path.Combine(_environment.ContentRootPath, "..", "El-Sim.Persistence", "Data", "AI"));
+    }
+
+    private static string? NormalizeAiFile(string? file)
+    {
+        return file?.Trim().ToLowerInvariant() switch
+        {
+            "system.md" => "system.md",
+            "activation.md" => "activation.md",
+            "faq.md" => "faq.md",
+            _ => null
+        };
     }
 
     private async Task<List<AdminProductItemViewModel>> GetAdminProducts(string category)
