@@ -48,6 +48,12 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# AI prompts and local assistant instructions
+/.NET/El-Sim.NET/El-Sim.Persistence/Data/AI/
+.cursor/
+.cursorrules
+.github/copilot-instructions/
+
 # OS files
 .DS_Store
 Thumbs.db
